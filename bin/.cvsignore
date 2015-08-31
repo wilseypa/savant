@@ -1,0 +1,6 @@
+scram
+.gdbinit
+Makefile
+Makefile.in
+.deps
+.libs

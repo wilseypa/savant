@@ -1,0 +1,257 @@
+\documentclass[11pt]{article}
+\setlength{\unitlength}{1in}
+\usepackage{url}
+
+\begin{document}
+
+
+\begin{center}
+SAVANT Frequently Asked Questions
+
+Last updated: \today
+\end{center}
+
+\tableofcontents
+
+\section{General Info}
+\subsection{What is SAVANT?}
+SAVANT is a VHDL analyzer and code generator orignally developed at the
+University of Cincinnati, and continued by Clifton Labs, Inc.  (See
+\url{http://www.ececs.uc.edu/~paw/savant} and
+\url{http://www.cliftonlabs.com/savantp.htm} for the respective websites.)
+It is designed to be easily extensible by the end user by allowing the
+insertion of new back ends into the intermediate form. The intermediate
+form that SAVANT supports is a modified version of the open specification
+called AIRE IIR.  See
+\url{http://www.cliftonlabs.com/savant/aire-spec/iirUS.pdf} for
+the original spec from which Savant's intermediate is based.  Unfortunately
+the public AIRE effort was discontinued sometime around 2000.  Since then
+we have made assumptions about how to fix ambiguities and had to extend the
+specification in several ways.  The documentation for the intermediate as
+we have implemented it can be found at
+\url{http://www.cliftonlabs.com/savant/docs/savant/html/hierarchy.html}.
+
+\subsection{Is SAVANT still alive?}
+As of 3/2005, yes.  Work has continued on SAVANT in bursts since it started
+in 1995.  One good place to gauge activity is the mailing list archives.
+CVS commits are public and can be found at
+\url{http://www.cliftonlabs.com/savant/list-archives/savant-devel/}.  For a
+full list of the mailing lists available about Savant and related tools see
+\url{http://cliftonlabs.com/cgi-bin/mailman/listinfo}.
+
+In 2004 a new plugin mechanism was developed for Savant that allows custom
+backends to be loaded as shared libraries by \texttt{scram} - Savant's
+front end.  This has profound implications.  For example, it is now
+possible to write proprietary backends for Savant and distribute them under
+non-LGPL licensing, making Savant an appropriate choice for a commercial
+front-end.  Secondly, the C++ code generation code has been moved out of
+the front-end completely making Savant's front-end code much cleaner and
+easier to understand.
+
+A tutorial (with a working example) for inserting a new backend into the
+analyzer is currently available from Clifton Labs' anonymous CVS server
+with the following command:
+\texttt{cvs -d :pserver:anonymous@cvs.cliftonlabs.com:/usr/local/cvsroot
+checkout savant_plugin_tutorial/}
+
+To see just the documentation go to the following link -
+\url{http://www.cliftonlabs.com/~dmartin/ExtensionDocumentation.pdf}.
+
+\subsection{TyVis}
+One of the backends that is freely available with the SAVANT distribution
+is a C++ code generator. It generates code for the University of
+Cincinnati's TyVis VHDL support library. TyVis is a C++ library that
+supports many of the concepts of VHDL like signals, signal assignment,
+etc. and works with a parallel discrete event simulation library, {\sc
+WARPED}.  (See
+\url{http://www.ececs.uc.edu/~paw/tyvis} and
+\url{http://www.ececs.uc.edu/~paw/warped} for details on those projects.)
+
+Using SAVANT, TyVis, and {\sc WARPED}, parallel VHDL simulation across SMP
+workstations, distributed machines, or large parallel systems is possible.
+
+\subsection{What could I use SAVANT for?}
+Here are some ideas:
+\begin{itemize}
+\item{Front end tools utilizing VHDL}  If you wanted to develop a
+project that uses VHDL as an input language, you could use the SAVANT
+analyzer, scram, to process the VHDL.  Scram takes VHDL input and builds an
+in-memory tree structure representing the VHDL.  There are several ways in
+which you can then develop tools to access this in-memory representation of
+the VHDL.  One example that falls in this category is a VHDL to ``some
+other language'' translator.  You would need to define how to turn an AIRE
+node into the other language, but the front end is all done for you.
+
+Another possibilty is to use the SAVANT front end to allow you to implement
+a design rule checker for custom in-house design rules.
+
+\item{Back end tools for emitting VHDL} - Our implementation of the AIRE
+specification has the functionality to write out VHDL from the internal
+tree form. So if you were to develop a front end for some language and
+used our implementation of AIRE as your intermediate, you'd get VHDL
+generation for free.  This would allow you to translate ``some other
+language'' into VHDL, as an example.
+
+\item{Custom transformations to VHDL itself} - Another thing you can do with
+SAVANT is to use it to transform VHDL to VHDL.  Why would you want to do
+this?  Several groups using SAVANT have implemented fault simulators by
+inserting fault injection nodes at port boundaries.  Other transformations
+could be made, to speed simulation, to allow synthesis of non-synthesizable
+constructs... 
+
+\item{Simulation of VHDL} - SAVANT, in combination with {\sc WARPED} and
+TyVis can be used to simulate VHDL, both sequentially, and in parallel.
+More about that can be found in this document at question
+\ref{status_section}.
+
+\end{itemize}
+
+\subsection{Where do I get it?}
+SAVANT is available for download at:
+\url{http://www.cliftonlabs.com/savant/download/2.0-prerelease/}. Clifton
+Labs also maintains a mirror of UC's SAVANT ftp site (with old releases
+only) at \url{http://www.cliftonlabs.com/savant/download/uc-mirror/}.  As
+of this writing the last ``official'' 2.0 prelease was in December 2003,
+but there has been a {\bf lot} of activity since then.  Essentially TyVis
+has been rewritten, the plugin architecture developed, and much more.
+Because of this the simulation backend is in a state of flux.  If you want
+to simulate VHDL get the 12/2003 prerelease.  If you are interested in the
+front-end and the plugin architecture, follow the directions at
+\url{http://www.phoci.com/~dmartin/savant-devel-primer.html} for getting
+SAVANT from CVS.
+
+\subsection{Where do I get std\_logic\_1164 and other libraries for
+SAVANT?}
+\subsubsection{Answer for version 1.0x}
+Check out the comp.lang.vhdl FAQ. It's home is
+\url{http://www.vhdl.org/comp.lang.vhdl/} See Part I, section 4.7.
+\subsubsection{Answer for version 2.0 (prerelease, currently)}
+The libraries are distributed with the analyzer, and if the installation is
+correct it should be able to find the automatically.
+
+\subsection{What is the status of SAVANT?}\label{status_section}
+SAVANT is under active development at Clifton Labs, Inc.
+\url{http://www.cliftonlabs.com}  Clifton Labs provides commercial support
+to corporate customers, including several major telecom companies, some
+government laboratories, and at least one EDA company.  These customers are
+finding SAVANT to be an effective solution for them for doing real work.
+
+SAVANT can analyze real designs. It can analyze over 97\% of the Billowitch
+test suite, and lots of real code we've thrown at it, including real
+designs for whole systems. It's pretty good at analyzing good VHDL. It will
+do weird things with bad VHDL sometimes, including allowing illegal
+constructs from time to time. We're still working on that, in addition to
+other improvements in the whole system.  Since Savant is LGPL feel free to
+fix deficiencies that you find and submit patches back to us.
+
+The code generator doesn't cover the language as well as the analyzer. At
+this point there is no documentation to say what's covered and what's not.
+We've recently started compiling a list; it will be in some future release.
+As you find things that don't work, please file a bug against the system at
+\url{http://www.cliftonlabs.com/bugzilla}.  Early in 2004 we started a
+rewrite of the TyVis backend with the aim of cleaning up the generated code
+to the point that an average C++ developer who was familiar with VHDL could
+have a chance of understanding the code.
+
+\subsection{Can I pay someone for support if I'm interested in using SAVANT for an
+important project?}\label{commercial_support}
+
+Yes.  Commerical support for SAVANT is available from Clifton Labs,
+Inc. (\url{http://www.cliftonlabs.com}) Clifton Labs employs several of the
+primary authors of SAVANT and is happy to fix bugs, provide training, phone
+support, implement new back-ends - you name it.  Please send email to {\tt
+savant@cliftonlabs.com} if you have any questions at all about support of
+any kind for SAVANT.
+
+\subsection{I've found a bug, what do I do now}
+
+Clifton Labs maintains a bug reporting system at
+\url{http://www.cliftonlabs.com/bugzilla}.  To maximize the chances that
+your bug gets fixed, you can do the one or more of the following things:
+\begin{itemize}
+\item File the bug in the bug reporting system.
+\item Be detailed in your report about the version of SAVANT you're using,
+the operating system you're running on, the compiler you're using, etc.
+\item Provide a concise test case that shows the problem.
+\item Provide a patch that fixes the problem.
+\end{itemize}
+
+Doing these things will move you to the top of the list of bugs that get
+fixed.  The best way to ensure that your bugs get fixed is to consider
+support from Clifton Labs.  See \ref{commercial_support}.
+
+\section{Building scram}
+
+\subsection{What is scram?}
+
+Scram is the name of the analyzer/code generator in SAVANT. No one can
+remember why it's named that way. We like it though.
+
+\subsection{Where do I get PCCTS ?}
+
+You can obtain PCCTS from \url{http://www.polhode.com/pccts.html}.  It's
+also part of some linux distributions.  If you're using Linux, follow the
+directions for your distribution for finding and installing packages.
+
+\subsection{Where do I get Flex?}
+
+You can ftp Flex from \url{ftp://ftp.gnu.org}. Go to \texttt{non-gnu/flex}.
+See too the note above about Linux distributions.
+
+\subsection{Where do I get GNU make?}
+
+You can ftp GNU make from \url{ftp://ftp.gnu.org}. Go to pub/gnu.
+
+\subsection{Compiling scram is slow - what can I do to get it to compile faster?!}
+Buy a faster machine! Well, OK. For us, it compiles in about 13 minutes.
+That's on a fast Athlon 64 system. A lot of RAM really helps. More than
+512M is probably enough for maximum comfort if you're really developing
+with SAVANT.
+
+Other tips... Specify the files that you've touched explicitly to make. If
+you modified IIRScram\_Declaration.cc then in the savant/src directory, say
+make aire/iir/IIRScram/IIRScram\_Declaration.o. Once you've beaten the bugs
+out of your new code, then do a make and let the whole thing build.
+
+\section{VHDL Analysis with "scram"}
+
+\subsection{ Why can't SAVANT parse std\_logic\_signed, std\_logic\_unsigned, 
+or some other std\_ library?}
+
+It probably can - we've tested with quite a few of them. However, it's not
+so simple as we'd like. This is because every vendor releases non-standard,
+non-compatible versions of their own libraries. So you need to find versions
+of the libraries that "line up". For instance, use all of the libraries from
+the same vendor and you should be OK.
+
+The best bet for portability is to work with the actual IEEE libraries. See
+Section 1.2 for details.
+
+\subsection{Can scram parse/simulate my design?}
+
+You'll have to try, we don't know.
+
+\subsection{Can scram parse/simulate any design?}
+
+It can parse and simulate a lot of real designs. We have many working
+examples. If you're having problems:
+\begin{enumerate}
+\item See if you can isolate your problem a bit - we get a lot of email.
+\item Send us a simplified test case exhibiting the problem and the full error
+messages you're seeing, or a description of the problem. You can send the
+email to savant-users@ececs.uc.edu if you like.
+\end{enumerate}
+
+\section{Simulation}
+
+\subsection{Where is an example of how to build a simulation using SAVANT?}
+
+One comes with the distribution, and it's also online at
+\url{www.ececs.uc.edu/~paw/savant/doc/simulationManual/}
+
+\subsection{When I tried to build my simulation, it didn't build. What should I
+do?}
+
+Follow the steps in Section 3.2.
+
+\end{document}

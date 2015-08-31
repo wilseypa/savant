@@ -1,0 +1,57 @@
+COMPONENTS OF THE SAVANT PROJECT
+--------------------------------
+
+The Intermediate Form
+---------------------
+
+
+Savant uses the Advanced Intermediate Representation with Extensibility/Common Enviorment
+(AIRE/CE).  It is defined as an object-oriented data structure, and has been developed
+jointly with FTL Systems.  Documentation for the basic AIRE/CE classes can be found at:
+http://www.ftlsystems.com/reprint.html
+
+SCRAM: A VHDL Analyzer
+----------------------
+
+The SCRAM analyze will input a VHDL description, check it for syntactic and static
+semantic correctness, and store in memory it in the intermediate form (IF).  The SCRAM
+parser is constructed as an LL(2) grammar and using the Purdue Compiler Construction Tool
+Set (PCCTS) parser generator (many thanks to Terence Parr, Hank Dietz, and Will Cohen).
+SCRAM is written in C++.
+
+
+Transmute: Derived Classes that Implement Static Equivalences
+-------------------------------------------------------------
+
+The transmute method is a collection of derived classes that support rewriting of the IF
+into a reduced form.  More precisely, these classes implement the static model reduction
+algebra defined in the UC RASSP formal modeling project.  Example reductions are the
+rewriting of a concurrent call statement into the equivalent process statement containing
+sequential call and wait statements.  These classes produce a reduced form IF against
+which back-end CAD tools can operate.
+
+
+Publisher: Derived Classes for Output Generation
+------------------------------------------------
+
+Output generation in the SAVANT software suite is supported by the collection of publisher
+classes.  Two overloaded methods, publish_vhdl() and publish_cc(), are defined for all
+nodes of the reduced IF.  The publish_vhdl() method simply regenerates VHDL from the
+internal IF.  The publish_cc() method produces c++ simulation code to link with the TyVIS
+simulation kernel.
+
+The Library Manager
+-------------------
+
+The ability of separating a VHDL description into separate independent libraries
+necessitate the existence of a library manager. As specified by the VHDL language
+reference manual (LRM) (chapter 11), parts of a VHDL description can be separately
+compiled into a library and accessed in other parts of the VHDL description. The library
+manager has been designed to take care of this functionality. It allows the user to create
+design libraries and helps the parser locate design libraries that are referenced in other
+VHDL descriptions.
+
+------------------------------------------------------------------------
+
+SAVANT
+The University of Cincinnati

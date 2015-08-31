@@ -1,0 +1,320 @@
+\documentclass[12pt]{report}
+
+\usepackage{alltt,color,fullpage,psfig-dvips}
+
+\newcommand{\version}{1.0}
+
+\begin{document}
+
+\title{
+\textbf{Using SAVANT for VHDL Simulation} \\
+(Documentation for version \version)}
+
+\author{
+\emph{Radharamanan Radhakrishnan} and \emph{Philip A.  Wilsey} \\
+Computer Architecture Design Laboratory \\
+Dept of ECECS, PO Box 210030 \\
+Cincinnati, OH  45221--0030 \\
+\texttt{savant@ececs.uc.edu}
+}
+
+\date{}
+
+\maketitle
+
+\vspace*{6in}
+
+\noindent
+Copyright $\copyright$ 1995--1999 The University of Cincinnati.  All
+rights reserved.  
+
+\bigskip
+
+\noindent
+Published by the University of Cincinnati \\
+Dept of ECECS, PO Box 210030 \\
+Cincinnati, OH  45221--0030 USA 
+
+%\bigskip
+
+\noindent
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+\medskip
+\noindent
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+
+\medskip
+\noindent
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions.
+
+\newpage
+
+%\tableofcontents
+\chapter{Introduction}
+
+So you have successfully installed SAVANT, TyVIS and WARPED software
+distributions and are now ready to use the software for VHDL
+simulation. If you have not done this, please follow the installation
+directions in the \textsf{README}, \textsf{INSTALL}, and
+\textsf{INSTALL-FOR-SIMULATION} text files available in \texttt{savant}
+directory\footnote{Also available at
+\texttt{http://www.ececs.uc.edu/$\sim$paw/savant}}. Please follow these 
+directions and install the software before proceeding further.
+
+This document attempts to give the reader step-by-step guidelines on
+how to perform (sequential or parallel) simulation of VHDL examples. The
+easiest method to do this is to use a VHDL example and walk the user
+through the steps.  Atleast some VHDL knowledge is required to understand
+the following description.  So without further ado, lets study the sample
+VHDL example (\texttt{test.vhdl}) that we will use to describe the
+simulation process:
+
+\section{Example Program - \texttt{test.vhdl}}
+
+\begin{verbatim}
+-- *******************************************************************
+-- Sample VHDL Simulation Demonstration Program - test.vhdl
+-- *******************************************************************
+
+1 library ieee;
+2 use ieee.std_logic_1164.all;
+
+3 library std;
+4 use std.textio.all;
+
+5 entity myEntity is
+6  -- empty entity
+7 end myEntity;
+
+8 architecture behavioral of myEntity is
+  
+9   begin
+    
+10    myProcess: process is
+  
+11     variable inputOne : std_logic_vector(0 to 1) := ('0','0'); 
+12     variable inputTwo : std_logic_vector(0 to 1) := ('1','1'); 
+
+13     variable traceLine : LINE;
+14     variable space : string(1 to 2) := "  ";
+
+15     file RESULT_FILE: text open WRITE_MODE is "results.out";
+
+16     begin
+
+17       write(traceLine, To_bitvector((inputOne and inputTwo)));
+18       write(traceLine, space);
+19       write(traceLine, To_bitvector((inputOne or inputTwo)));
+20       write(traceLine, space);
+21       write(traceLine, To_bitvector((inputOne xor inputTwo)));
+22       writeLine(RESULT_FILE, traceLine);
+
+23       wait;
+
+24     end process myProcess;
+
+25 end architecture behavioral;  
+
+\end{verbatim}
+
+As can be seen from the VHDL source code, the example instantiates a
+process which performs \texttt{and}, \texttt{or} and \texttt{xor}
+operations (Lines 17, 19, and 21) on two standard logic vectors
+(\texttt{inputOne} and \texttt{inputTwo}). In addition, it writes out the
+result of the operations (after converting the standard logic vectors to
+bit vectors by calling the \textsf{To\_bitvector} function that is part of
+the \texttt{std\_logic\_1164} library) to a file (\texttt{results.out}).
+
+\section{Guidelines for simulating VHDL Programs}
+
+The installation process will build \texttt{scram} (the SAVANT VHDL
+analyzer) in a user specified directory (usually in
+\texttt{savant/bin}). The analyzer has the following command line
+parameters that the user needs to be familiar with: 
+
+\begin{verbatim}
+mymachine.home.edu <user_specified_dir>/savant/bin> scram
+savant 1.0 (March 8, 1999)
+Copyright(C) 1993-1999 The University of Cincinnati.
+All rights reserved.
+
+Usage <user_specified_dir>/savant/bin/scram -options <files>
+Where options is one of the following:
+  -debug-symbol-table    print out debugging info relating to symbol table
+  -design-library-name   design library name
+  -publish-vhdl          publish VHDL
+  -publish-cc            publish c++
+  -no-file-output        send publish_cc output to stdout instead of files
+  -warranty-info         print information about (lack of) warranty
+  -static-elaborate      statically elaborate the specified design
+  -partitions            specify # of partitions for elaborated design
+  -entity                specify entity to use
+  -arch                  specify architecture to use
+  -config                specify configuration to use (if needed)
+  -alg                   specify static partitioning algorithm to use
+  -v                     verbose output
+  -help                  print this message
+
+\end{verbatim}
+
+Assuming that the installation process completed successfully, the
+following steps detail the process by which an user can use the SAVANT
+software for simulating VHDL examples.
+
+\begin{enumerate}
+
+\item Alias \texttt{<user\_specified\_dir>/savant/bin/scram} to
+      \texttt{scram}. This is just for convenience so that the user can
+      access the \texttt{scram} executable from any directory.
+
+\item The example VHDL file (\texttt{test.vhdl}) imports two libraries
+      (Line 1 and 3: \texttt{ieee} and \texttt{std}) and uses these
+      libraries just like include files in C/C++. However, the libraries
+      need to be handled differently from normal include files. The
+      \texttt{std} library gets automatically included by the
+      \texttt{scram} parser and the user need not do anything about this
+      library. However, the \texttt{ieee} library needs to be
+      analyzed/parsed before the example VHDL file can be analyzed. To do
+      this, perform the following steps:
+
+      \begin{itemize}
+	
+	\item [Step 1:] Locate the \texttt{std\_logic\_1164.vhdl} source
+	VHDL file. This file needs to analyzed before \texttt{test.vhdl}
+	can be analyzed.  This file isn't distributed with savant as it is
+	copyighted by IEEE and not freely redistributable.  Note too, that
+	versions of this file (and other IEEE libraries) shipped with
+	commercial analyzers may vary in subtle or not so subtle ways from
+	IEEE's definition standard library.  For instance, the
+	std\_logic\_1164 from Synopsys requires other libraries that define
+	things that aren't part of the standard.
+
+        \item [Step 2:] Look in the \texttt{std\_logic\_1164.vhdl} source
+        VHDL file to see if it in turn includes any other libraries. If it
+        does, then recursively execute this step. 
+
+        If you look at the \texttt{std\_logic\_1164.vhdl} source, you might
+        see that it includes a package (\texttt{attributes}) from another
+        library called \texttt{synopsys}. So we will need to locate the
+        \texttt{attributes.vhdl} file which contains the ``attributes''
+        package used by the \texttt{std\_logic\_1164.vhdl} library.
+
+	\item [Step 3:] Having resolved the include dependencies of the
+	libraries to the \texttt{attributes.vhdl} file, we are now ready
+	to create the \texttt{synopsys} and \texttt{ieee}
+	design\footnote{For more information about design libraries and
+	how they are handled in SAVANT, please refer to the documentation
+	on the library manager (available at
+	\texttt{http://www.ececs.uc.edu/$\sim$paw/savant})} libraries.
+
+        Analyze the \texttt{attributes.vhdl} file into the
+        \texttt{synopsys} design library by executing the following
+        command:\\
+       
+	\texttt{scram -publish-cc -design-library-name synopsys
+        attributes.vhdl}\\
+
+	This will result in the creation of a design library named
+	\texttt{synopsys.\_savant\_lib} and the code generation of TyVIS
+	compliant C++ source files in the current working directory. If
+	you look inside this directory, it will contain code-generated
+	VHDL files, C++ files and a Makefile. This directory is a
+	self-contained unit and the user need not do anything further with
+	this directory.
+
+	\item [Step 4:] Repeat Step 3 for the \texttt{ieee} design
+	library. Since the \texttt{synopsys} library is now available, the
+	\texttt{std\_logic\_1164.vhdl} source file can now be analyzed
+	into the \texttt{ieee} design library. Hence, executing the
+	following command:\\
+     
+	\texttt{scram -publish-cc -design-library-name ieee
+        std\_logic\_1164.vhdl}\\
+
+	will result in the creation of a design library named
+	\texttt{ieee} and the code generation of TyVIS compliant C++
+	source files in the newly created design library directory. If you
+	look inside this directory, it will contain code-generated VHDL
+	files, C++ files and a Makefile. Again, this directory is a
+	self-contained unit and the user need not do anything further with
+	this directory.
+
+      \end{itemize}
+
+\item We are now ready to analyze the example VHDL program,
+      \texttt{test.vhdl} given that both \texttt{ieee} and the
+      \texttt{synopsys} design libraries are now available. Execute the
+      following command:\\
+
+      \texttt{scram -publish-cc test.vhdl}
+
+\item This will result in the creation of the \texttt{work.\_savant\_lib}
+      directory. This is a work directory automatically created by
+      \texttt{scram} and contains code generated VHDL and C++ files. It
+      also contains the top level Makefile that is cognizant of the other
+      two design libraries (\texttt{ieee} and \texttt{synopsys}). Now all
+      the user needs to do, is to execute the following command:\\
+
+      \texttt{cd work.\_savant\_lib};\\
+      \texttt{make depend; make}
+
+\item The execution of the aforementioned commands will result in the
+      compilation of all the code-generated C++ files (including those in
+      the \texttt{ieee} and \texttt{synopsys} design libraries) and the
+      creation of the executable
+      (\texttt{work\_Dmyentity\_work\_Dmyentity\_Dbehavioral}). This will
+      be the final simulation executable that the user needs to execute to
+      run the simulation. Executing the following command:\\
+
+      \texttt{work\_Dmyentity\_work\_Dmyentity\_Dbehavioral} \\
+
+      will result in the initiation of a sequential simulation (assuming
+      the SAVANT software was configured for sequential execution; the
+      SAVANT software can be configured for parallel execution
+      also\footnote{Please refer to the \textsf{INSTALL-FOR-SIMULATION}
+      document for instructions on how to configure the SAVANT software
+      for parallel execution.}) of the VHDL source file. Since the
+      original VHDL file writes the output of the logical operations to a
+      file (\texttt{results.out}), the last step is to ascertain if the
+      simulation executed correctly and the correct results were written
+      to the file.
+
+\item Looking at the \texttt{results.out} file, we see the following
+      result:\\
+
+	 \texttt{00  11  11}\\
+
+      So, is this result right? (\texttt{00 and 11}) results in
+      \texttt{00}. (\texttt{00 or 11}) results in \texttt{11}.
+      (\texttt{00 xor 11}) results in \texttt{11}. So, the output is
+      correct implying that the simulation executed correctly and that
+      concludes our little simulation demonstration.
+
+\end{enumerate}
+
+\section*{Acknowledgments}
+
+This research has been conducted with the participation of many
+investigators.  While not an complete list, the following individuals have
+made notable direct and/or indirect contributions to this effort (in
+alphabetical order):
+
+Jeff Carter, Harold Carter, Praveen Chawla, Malolan Chetlur, John Hines,
+Herb Hirsch, Dale E. Martin, Timothy J. McBrayer, Greg Peterson, Phani
+Putrevu, Radharamanan Radhakrishnan, Umesh Kumar V. Rajasekaran, Dhananjai
+Madhava Rao, Al Scarpelli, Mike Shellhause, Krishnan Subramani,
+Swaminathan Subramanian, Narayanan V. Thondugulam, and John Willis.
+
+We wish to express our sincerest gratitude for the time that you spent
+reviewing and commenting on our designs.  This research was supported in
+part by the Wright Laboratory at Wright-Patterson AFB, DARPA, and MTL
+Systems, Inc.  Thank you for your support.
+
+\end{document}

@@ -1,0 +1,136 @@
+
+# Copyright (C) Clifton Labs, Inc
+# All rights reserved.
+
+# CLIFTON LABS MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+# THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+# NON-INFRINGEMENT.  CLIFTON LABS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED
+# BY LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR DISTRIBUTING
+# THIS SOFTWARE OR ITS DERIVATIVES.
+
+# By using or copying this Software, Licensee agrees to abide by the
+# intellectual property laws, and all other applicable laws of the U.S., and
+# the terms of this license.
+
+# You may modify, distribute, and use the software contained in this package
+# under the terms of the "GNU LIBRARY GENERAL PUBLIC LICENSE" version 2, June
+# 1991. A copy of this license agreement can be found in the file "LGPL",
+# distributed with this archive.
+
+# -----------------------------------------------------------------------
+# Only the commands defined below should be used in the scripts for SAVANT 
+# tests. 
+# -----------------------------------------------------------------------
+
+
+# This procedure performs the initial setup for running a test group (e.g.,
+# Billowitch, Ashenden, etc).  This procedure has two arguments: (i) name,
+# which names the test suite, and (ii) std which can be one of "vhdl-93",
+# "vhdl-ams", "vhdl-2001", "1076-1993", "1076.1-1999", or "1076-2001".
+proc setup_test_group {name std} {
+    report_info2 "setup_vhdl_test_group: running tests \"${name}\" for language standard \"${std}\".\n"
+    global test_name
+    global language_std
+
+    set legal_language_std_values {"vhdl-93" "vhdl-ams" "vhdl-2001" "1076-1993" "1076.1-1999" "1076-2001"}
+
+    set test_name ${name}
+    set language_std ${std}
+
+    # verify the value stored in language_std
+    if {[lsearch ${legal_language_std_values} ${language_std}] == -1} {
+	report_error "Illegal language standard argument given on setup_vhdl_test_group.\n  \
+		      Legal values are ${legal_language_std_values}."
+    }
+
+    reset_group_counters
+}
+
+#
+proc end_test_group {} {
+    global test_name
+    global language_std
+
+    # add group counters to the global list
+    package_group_counters
+
+    # clear test name and language standard
+    set test_name ""
+    set language_std ""
+}
+
+# Create a library workspace.  scram will take care of all setup, so do
+# nothing. 
+proc create_lib {library} {
+    report_info2 "create_lib invoked to create library: ${library}.\n"
+}
+
+# Set the default working library (if not defined, work will be assumed).
+proc use_lib {library} {
+    global scram_library
+
+    report_info2 "use_lib invoked to set default library to: ${library}.\n"
+    set scram_library ${library}
+}
+
+# Delete a library workspace.
+proc delete_lib {library} {
+    report_info2 "delete_lib invoked to delete library: ${library}...."
+    exec rm -rf ${library}._savant_lib
+    report_info2 "done.\n"
+}
+
+# Analyze a compliant test and enter it into a library.
+proc build_compliant_test {test_case args} {
+    global scram_test_level
+
+    report_info2 "build_compliant_test invoked for testcase ${test_case} with arguments ${args}\n"
+
+    increment_test_counter ${test_case}
+    increment_build_test_counter ${test_case}
+
+    # if necessary downgrade the test level
+    if {${scram_test_level} == "simulate"} {
+	set test_result [exercise_vhdl_model ${test_case} [concat ${args} "TESTLEVEL=build"]]
+    } else {
+	set test_result [exercise_vhdl_model ${test_case} ${args}]
+    }
+    record_compliant_test_result ${test_case} ${test_result}
+}
+
+# Analyze, compile, and run a compliant test.
+proc run_compliant_test {test_case args} {
+    global scram_library
+
+    report_info2 "run_compliant_test invoked for testcase ${test_case} with arguments ${args}\n"
+
+    increment_test_counter ${test_case}
+    increment_run_test_counter ${test_case}
+
+    # capture library name for deletion...
+
+    set test_result [exercise_vhdl_model ${test_case} ${args}]
+
+    record_compliant_test_result ${test_case} ${test_result}
+
+    delete_lib ${scram_library}
+}
+
+# Analyze, compile, and run a non-compliant test.
+proc run_non_compliant_test {test_case args} {
+    global scram_library
+
+    report_info2 "run_non_compliant_test invoked with arguments ${args}\n"
+
+    increment_test_counter ${test_case}
+    increment_non_compliant_test_counter ${test_case}
+
+    set test_result [exercise_vhdl_model ${test_case} ${args}]
+
+    record_non_compliant_test_result ${test_case} ${test_result}
+
+    delete_lib ${scram_library}
+}
+
+

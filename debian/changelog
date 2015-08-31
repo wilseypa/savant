@@ -1,0 +1,30 @@
+savant (20031216-2) unstable; urgency=low
+
+  * Don't statically link scram.
+
+ -- Dale E Martin <dmartin@cliftonlabs.com>  Fri,  2 Jan 2004 15:23:52 -0500
+
+savant (20031216-1) unstable; urgency=low
+
+  * New upstream release.
+  * Built against new dependency, libclutils0-dev.
+  * Closes: Bug#191199
+  * Closes: Bug#144841
+
+ -- Dale E Martin <dmartin@cliftonlabs.com>  Fri,  2 Jan 2004 11:48:58 -0500
+
+savant (2.0pre010829-2) unstable; urgency=low
+
+  * Added -ffunction-sections in the build if the arch is hppa.
+
+ -- Dale E Martin <dmartin@cliftonlabs.com>  Fri,  2 Jan 2004 11:47:43 -0500
+
+savant (2.0pre010829-1) unstable; urgency=low
+
+  * New upstream release.
+  * Repackaged from scratch.
+
+ -- Dale E Martin <dmartin@cliftonlabs.com>  Thu, 11 Apr 2002 11:45:05 -0400
+Local variables:
+mode: debian-changelog
+End:

@@ -1,0 +1,21 @@
+savant for DEBIAN
+-----------------
+
+Savant is the University of Cincinnati/Clifton Lab's VHDL analyzer.  It is
+good for a couple of things (i) it can be extended, allowing the
+development of custom tools, and (ii) it has a C++ generating backend that
+will allow the conversion of VHDL to C++.  This C++ can be compiled into an
+executable simulation.  To do this, you'll need the following packages
+installed:
+libclutils0-dev
+libwarped0-dev
+libtyvis1-dev
+
+After installing these, you should be able to run the following command:
+scram --publish-cc <vhdl_file>
+
+This will produce a directory, "work._savant_lib".  "cd" into this
+directory, and type "make", and it should build an executable.  Executing
+the resulting executable will run the simulation.
+
+Dale E. Martin <dmartin@cliftonlabs.com>, Thu Apr 11 11:49:50 EDT 2002

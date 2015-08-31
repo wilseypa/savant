@@ -1,0 +1,29 @@
+Before the 1.2 release, the following milestones should be achieved:
+
+- Rearchitect warped to allow runtime configuration
+  * done, although parallel VHDL simulation broken currently
+  * parallel i/o needs to be designed/implemented
+
+- Warped, TyVis, and SAVANT converted to "automake" builds
+  * needs cleaned up/completed, "make dist", etc
+
+- Integrated IEEE libraries
+  * done
+
+- New type system for code generator
+  * done
+
+- Parsing/Code Generation/Simulation support of VITAL
+  * parsing and code generation OK, need to check out simulation
+
+- Simulation execution without explicit need for a config file
+  * done
+
+- Billowitch end to end as good as/better than last release
+  * not done
+
+- Updates of all documentation
+  * not done
+
+
+

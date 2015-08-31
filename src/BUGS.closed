@@ -1,0 +1,5851 @@
+------------------------------------------------------------------------
+Date: April 24, 1998
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: 
+An IIR_IntegerSubTypeDefinition node is built instead of an
+IIR_RangeAttribute node.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: normal (but bad VHDL)
+
+Reference to test case that has this problem: 
+ashenden/no_err/ap_a_ap_a_07.vhd (Needs related files)
+
+Detailed description of the problem or reference to it:
+
+When declarating a constant in the architecture by constraining and
+unconstrained-array array with range attribute of a port, an
+IIR_IntegerSubTypeDefinition node is built instead of an
+IIR_RangeAttribute node. .ie.
+
+   --** Snip from example **--
+
+   architecture behavior of bidir_buffer is
+   -- code from book
+
+  constant hi_impedance : std_logic_vector(bidir'range):=(others =>'Z');
+                                               |
+  The node built for that range is an          |
+  IIR_IntegerSubtypeDefinition rather than <-- +
+  an IIR_RangeAttribute.
+
+  This resulting VHDL is bad and fails reparsing.
+
+Bug fixed by: DJ, as suggested by Dale
+
+Date fixed: 
+  May 1 '98
+
+Files Modified for fixing the bug: 
+  IIRScram_ScalarTypeDefinition.cc
+     Added a missing case. Check for the attribute not being "null" was
+  missing and was causing the publishing to be incorrect.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: April 26, 1998
+Submitted by: TV
+Priority: HIGH
+Short Description of the problem: 
+Implicit Guard signal node is not created properly
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Code-gen failure
+
+Reference to test case that has this problem: 
+helga:/work/nthondug/savant_tests/test1/guard_c.vhdl
+
+Detailed description of the problem or reference to it: 
+In the test case mentioned above though the implicit signal "guard" is
+created for the block L1 it's get_value() is not resolved. It turns out
+to be a simple name whereas it should be the signal declaration node of
+"my_guard". Also the implicit signal guard does not appear in the
+declarative region of the block and it is also marked as an explicit
+signal. 
+
+Bug fixed by: 
+
+Date fixed: 
+	    4/27/98
+Files Modified for fixing the bug: 
+	    IIRScram_ConcurentConditionalSignalAssignementStatement.cc
+	    IIRScram_ConcurentSelectedSignalAssignementStatement.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: April 26
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH 
+Short Description of the problem: named association/positional association
+error.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+savant_tests/ucomic/dp_con.vhd
+
+Detailed description of the problem or reference to it: 
+dp_con.vhd:273: After a named association has appeared in an association
+list, no positional associations may follow. 
+aire/iir/IIRScram/IIRScram_AssociationList.cc:883: failed assertion
+`formal_part != ((void*)0)' 
+
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		4/30/98
+Files Modified for fixing the bug: 
+		IIRScram_AssociationList.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Apr 19
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: Parser Aborts while calling
+copy_location
+Module: PARSER
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: ABORT
+
+Reference to test case that has this problem: Around 577 cases
+tc1019.vhd, tc1020.vhd, tc1069.vhd
+577 files have this problem.
+
+Detailed description of the problem or reference to it: 
+Parser Prints the following message before Aborting.
+
+tc1906.vhd-parse-status:scram: aire/iir/IIRScram/IIRScram.cc:1232: static void IIRScram::copy_location(class IIRScram *, class IIRScram *): Assertion `source->_get_design_file() != ((void *)0)' failed.
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		4/20/98
+Files Modified for fixing the bug: 
+		IIRScram_AssociationList, and others.
+------------------------------------------------------------------------
+
+-------------------------------------------------------------------
+Date: Oct  6- Date (18/jan/97)
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: The labels appearing in the Designator
+list of IIR_ComponentConfiguration are not resolved
+	The labels appearing in the configuration declaration are
+different from the ones appearing in the concurrent statement of the architecture.
+Module: PARSER
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: Aborts during Code-generation
+
+Reference to test case that has this problem: tc840.vhd, tc877.vhd, tc837.vhd
+tc842.vhd, tc843.vhd, tc844.vhd
+Detailed description of the problem or reference to it: 
+If there is a configuration declaration of the following form:
+
+ARCHITECTURE A1 OF E1 IS
+BEGIN
+...
+    AA_BLK : block
+        component FOUR
+        end component;
+    begin
+        LH : FOUR;
+        LR : FOUR;
+    end block;
+END;
+
+configuration C1 of E1 is
+    for A1
+        for AA_BLK
+            for LH, LR : FOUR
+                use entity work.E2(A2);
+            end for;
+        end for;
+    end for;
+end C1;
+	The Label, AA_BLK is different from the AA_BLK appearing in the 
+concurrent statement.
+
+	The labels LH and LR appearing here are different from the
+ones, that are appearing within the Block statement AA_BLK.
+Previous Bug Fix report :
+=========================
+Bug fixed by: 
+	Dale
+Date fixed: 
+	10/15/97
+Files Modified for fixing the bug: 
+	too many to list.
+
+Bug Fixed By :
+Date Modified  :
+Files Modified for Fixing the bug :
+	couldn't reproduce.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Feb 5
+Submitted by: Narayanan Thondugulam
+Priority: HIGH
+Short Description of the problem: Parser aborts due to some problem in 
+the symbol table
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem:
+~nthondug/vhdl/move_mc.vhd (needs file ~nthondug/vhdl/functions.vhd)
+
+Detailed description of the problem or reference to it: 
+Parser aborts saying
+
+scram: scram/symbol_table.cc:52: void symbol_table::add_declaration(class IIR_Declaration *): Assertion `decl_ptr->_is_visible() == true' failed.
+Abort
+
+This bug has surfaced after the recent commit concerning the symbol
+table.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	(couldn't reproduce.)
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Feb 27
+Submitted by: Narayanan Thondugulam
+Priority: HIGH
+Short Description of the problem: Simulation failure
+the symbol table
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Simulation failure
+
+Reference to test case that has this problem: tc1069.vhd
+
+Detailed description of the problem or reference to it: 
+
+In the file there is a function named func1. Now if you look at the return
+type of the function it is type "A6" whereas the aggregate that is
+returned is of type "A" where as it should be the same as return type.
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		3/2/98
+
+Files Modified for fixing the bug: 
+		IIRScram_ResolutionFunc.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 19
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: implicit base types of array types WITH
+INTEGER RANGES are not unconstrained.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: normal (but bad VHDL)
+
+Reference to test case that has this problem:
+
+billowitch/no_err/tc1028, billowitch/no_err/tc113.vhd
+
+(Refer to ~dmadhava/savant_test/error_cases" for a comprehensive list of
+270 other cases)
+
+Detailed description of the problem or reference to it:
+
+The base type of array types is set to the range of the array
+itself. The base type must be unconstrained.
+
+Bug fixed by:
+
+Date fixed:
+
+Files Modified for fixing the bug:
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jan 19
+Submitted by: Swaminathan Subramanian
+Priority: HIGH
+Short Description of the problem: scram aborts
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+billowitch/no_err/tc717.vhd
+
+Detailed description of the problem or reference to it: 
+got the following error message:
+
+Processing file tc717.vhd
+util/library_manager.cc:413: failed assertion `use_file->library_units.num_elements() == 1'
+Abort
+
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	couldn't reproduce
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov 17
+Submitted by: Dale Martin
+Priority: HIGH
+Short Description of the problem:  Difference between user defined
+attributes and qualified expressions not always determined correctly.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: assertion violation
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/standard_libraries/std_logic_arith.vhdl
+
+Detailed description of the problem or reference to it: 
+Initializer |"01"| is incompatible with type |<ANONYMOUS>|.
+Initializer |"01"| is incompatible with type |<ANONYMOUS>|.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	couldn't reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 25
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem:
+  The implicit declaration of attributes of signals in a sensitized
+process statement get added to the sensitivity list, instead of the
+attribute itself.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal (bad vhdl)
+
+Reference to test case that has this problem:
+
+  sharc_a31/benchmarks/t35/t35.vhdl
+
+Detailed description of the problem or reference to it: 
+
+   When process TRACE is parsed, the implicit declaration of quiet 
+attributes of the signal serial_output get added to the sensitivity
+list, instead of the attribute itself. This causes bad vhdl to be
+published.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	couldn't reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 18
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: Unable to parse configuration
+specifications with named associations.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+
+entity foo is
+    port (signal pi : in  bit;
+          signal po : out bit
+         );
+end foo;
+
+architecture bar of foo is
+begin
+end;
+ 
+ENTITY box IS
+    port (signal pi : in  bit;
+          signal po : out bit
+         );
+END box;
+
+ARCHITECTURE blackbox OF box IS
+    signal lab_sig : boolean := true;
+ 
+    component comp
+        port (signal pi : in bit;
+              signal po : out bit
+             );
+    end component; -- comp
+
+    for xcomp : comp use entity work.foo(bar)
+                         port map (pi => pi, po => po);
+
+BEGIN
+    xcomp : component comp
+            port map (pi => pi, po => po);
+END blackbox;
+
+
+Detailed description of the problem or reference to it: 
+
+test.vhd:27: warning: Formal port |pi| has no default specified, and no value has been specified for it.
+test.vhd:27: warning: Formal port |po| has no default specified, and no value has been specified for it.
+scram: aire/iir/IIRScram/IIRScram_AssociationList.cc:1097: void
+IIRScram_AssociationList::_fill_in_defaults(class IIR_InterfaceList *):
+Assertion `num_elements() == parameter_list->num_elements()' failed. 
+Abort
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	couldn't reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Dec  4
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: open ports/generic  not handled
+Module: Parser/Semantic Analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Fails parsing
+
+Reference to test case that has this problem: tc3140.vhd, tc3141.vhd,
+tc3142.vhd
+
+Detailed description of the problem or reference to it: 
+scram prints the following message :
+
+Processing file /work/malolan/savant_tests/billowitch/no_err//tc3140.vhd
+Internal scram error: disconnected ports currently not supported when using default binding in a configuration specification.
+No local generic found with name |g1|
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	couldn't reproduce
+------------------------------------------------------------------------\
+------------------------------------------------------------------------
+Date: Nov  6
+Submitted by: Malolan Chetlur
+Priority: HIGH (Bumped up from Medium on dec 4)
+Short Description of the problem: user defined attributes on entities,
+packages, architecture are not handled, parser fails assertion or seg-faults.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Incomplete parsing
+
+Reference to test case that has this problem: tc3109.vhd
+
+Detailed description of the problem or reference to it: 
+scram prints the following message before exit :
+
+tc3109.vhd:12: _get_rval() not defined for IIR node: IIR_ArchitectureDeclaration
+tc3109.vhd:12: _get_rval() not defined for IIR node: IIR_ArchitectureDeclaration
+tc3109.vhd:12: _get_rval() not defined for IIR node: IIR_ArchitectureDeclaration
+tc3109.vhd:12: _get_rval() not defined for IIR node: IIR_ArchitectureDeclaration
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	couldn't reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Dec 12
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: Internal scram error: disconnected ports
+currently not supported when using default binding in a configuration
+specification.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: incorrect exit
+
+Reference to test case that has this problem:
+savant_tests/parMult/parMult32.vhdl
+
+Detailed description of the problem or reference to it: 
+Processing file parMult32.vhdl
+Internal scram error: disconnected ports currently not supported when
+using default binding in a configuration specification. 
+No local generic found with name |per1|
+No local generic found with name |per2|
+make: *** [parMult32.vhdl] Error 255
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	couldn't reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Dec 12
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: scram hits an assertion in
+EnumerationLiteral
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+savant_tests/i8085/i8085erm.vhdl
+
+Detailed description of the problem or reference to it: 
+Processing file i8085erm.vhdl
+aire/iir/IIRScram/IIRScram_EnumerationLiteral.cc:239: failed assertion
+`retval != ((void*)0)' 
+abort
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	couldnt reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 18
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: declarative region of an architecture
+should be IIR_LIBRARY_DECLARATION, but somehow it is being set to
+IIR_ARCHITECTURE_DECLARATION
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+savant_tests/DP32/test.vhd
+
+Detailed description of the problem or reference to it: 
+The following assert fails while parsing test.vhd:
+ASSERT(_get_declarative_region()->get_kind() == IIR_LIBRARY_DECLARATION);
+
+The error message is:
+aire/iir/IIRScram/IIRScram_ArchitectureDeclaration.cc:107: 
+failed assertion `_get_declarative_region()->get_kind() == 
+						IIR_LIBRARY_DECLARATION'
+Abort (core dumped)
+
+This is because, when the library manager brings in boo(bar) and adds to
+the symbol table, the declarative region of foo is set to the architecture
+(blackbox in the error case) in which the configuration specification
+statement is
+              - DJ.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	can't reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Dec 11
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: scram hits an assertion failure in 
+ConcurrentConditionalSignalAssignment.
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: core dumps
+
+Reference to test case that has this problem:
+savant_tests/ucomic/alu.vhd
+
+Detailed description of the problem or reference to it: 
+The following error message is displayed:
+Processing file alu.vhd
+alu.vhd:179: Incompatible types in assignment: out_sl <= "&"
+aire/iir/IIRScram/IIRScram_ConcurrentConditionalSignalAssignment.cc:207: failed assertion `_is_resolved() == true'
+make: *** [alu.vhd] Abort (core dumped)
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	can't reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jan 14
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: scram could not resolve the types in an
+assignment stmt
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: exits incorrectly
+
+Reference to test case that has this problem:
+savant_tests/standard_libraries/std_logic_arith.vhdl
+A similar error is reported by savant_tests/gameOfLife/lifecore.vhd
+
+Detailed description of the problem or reference to it: 
+Error reported by scram:
+std_logic_arith.vhd:447: Imcompatible types in assignment: aa := "&"
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	can't reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jan 14
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: scram encounters a statement that it
+cannot recognize
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+savant_tests/cmu_benchmarks/2901/funct_block_alg_beh2901.vhdl
+
+Detailed description of the problem or reference to it: 
+The following error message is displayed:
+funct_block_alg_beh2901.vhdl:61: Umm, don't know what this |i(2 downto 0)| is refering to. (Doesn't seem to be a function call, slice, type conversion, or array access).
+
+aire/iir/IIRScram/IIRScram_IndexedName.cc:1115: failed assertion `retval->_is_resolved() == true'
+make: *** [funct_block_alg_beh2901.vhdl] Abort (core dumped)
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	can't reproduce
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 18
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: The Assertion _is_iir_name() == TRUE is 
+failing in _lookup_package() func in IIRScram.cc for several cases
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/adc_8bit/gen_func_pkg_body.vhdl
+~ramanan/research/savant_tests/coelho/std_logic_body.vhdl
+~ramanan/research/savant_tests/fattree/fat_tree_types-body.vhd
+/research/savant_tests/multiplier/bv_arithmetic_body.vhdl
+
+Detailed description of the problem or reference to it: 
+The Assertion _is_iir_name() == TRUE is 
+failing in _lookup_package() func in IIRScram.cc for several cases.
+Here is the error message:
+aire/iir/IIRScram/IIRScram.cc:819: failed assertion `_is_iir_name() == true'
+Abort (core dumped)
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	can't reproduce.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 1 (jan 18)
+Submitted by: Malolan Chetlur
+Priority: HIGH (Bumped up from MEDIUM)
+
+Short Description of the problem: Parser fails assertion in function 
+IIR_Name*
+IIRScram_AssociationList::_get_actual_part_from_indexed_name(IIR_IndexedName*)
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Assertion failure
+
+Reference to test case that has this problem: tc147.vhd
+Files currently showing this bug are :
+	tc855.vhd, tc864.vhd, tc859.vhd, tc857.vhd, tc861.vhd, tc868.vhd,
+tc869.vhd, tc870.vhd, tc871.vhd, tc872.vhd
+
+Detailed description of the problem or reference to it: 
+
+Prints the following message during Assertion Failure :
+
+"scram: aire/iir/IIRScram/IIRScram_AssociationList.cc:595: class IIR_Name * IIRScram_AssociationList::_get_actual_part_from_indexed_name(class IIR_IndexedName *): Assertion `temp->_is_iir_name() == true' failed.
+Abort (core dumped)"
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		1/26/98
+Files Modified for fixing the bug: 
+		IIRScram_AssociationList.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jan 18
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: get_entity() returns a different pointer
+from that of the entity declaration
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: asserton failure during code generation
+
+Reference to test case that has this problem: tc1651.vhd, tc1718.vhd,
+tc1734.vhd, tc1739.vhd
+Test cases containing a concurrent statement in a an entity's statement
+part.
+
+Detailed description of the problem or reference to it: 
+
+Bug fixed by:	
+		Dale
+Date fixed: 
+		1/26/98
+Files Modified for fixing the bug: 
+		(see Umesh's Jan. 17th bug)
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jan  18
+Submitted by: Narayanan Thondugulam
+Priority: HIGH
+Short Description of the problem: Parser failing on others initialization
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+A bunch of test cases from tc1359.vhd to tc1369.vhd
+other test cases are :
+	tc1073.vhd, tc1370.vhd, tc1371.vhd, tc1372.vhd, tc1373.vhd,
+tc1374.vhd, tc429.vhd, tc430.vhd, tc486.vhd
+
+Detailed description of the problem or reference to it: 
+
+Files from tc1359.vhd to tc1369.vhd were simulating earlier but 
+now they are failing on others initialization
+
+Processing file adder64.vhdl
+/work/malolan/savant_tests/billowitch/no_err/tc1360.vhd:104: |( others => c_st_arr1_1)| is not valid in this context.
+scram: aire/iir/IIRScram/IIRScram_OthersInitialization.cc:333: class IIR *
+IIRScram_OthersInitialization::_rval_to_decl(class IIR_TypeDefinition *):
+Assertion `get_subtype() != ((void *)0)' failed.
+
+Bug Fixed by:
+		Dale
+Date fixed: 
+		1/26/98
+Files Modified for fixing the bug: 
+		IIRScram_OthersInitialization.
+------------------------------------------------------------------------
+---------------------------------------------------------------------------
+Date: Jan 17
+Submitted by: Umesh Kumar Rajasekaran
+Priority: HIGH
+Short Description of the problem: implicit_declarations being NULL
+Module: parser
+---------------------------------------------------------------------------
+Type of exit when exhibiting bug: normal exit
+
+Reference to test case that has this problem:
+savant_tests/arms_counter/ARMS_COUNTER.vhdl
+savant_tests/i8085/i8085erm.vhdl
+
+Detailed description of the problem or reference to it:
+
+in ARMS_COUNTER.vhdl we have the following vhdl code.
+entity ARMS_COUNTER is
+  port (
+        CLK: in BIT;
+        STRB : in bit;
+        CON: in BIT_VECTOR(1 downto 0);
+        DATA: in BIT_VECTOR(3 downto 0);
+        COUT: out BIT_VECTOR(3 downto 0));
+
+end ARMS_COUNTER;
+
+and one of the processes in this entity's architecture uses
+clk'stable. But the _implicit_declarations list is NULL for this
+signal declared in the port.
+
+The same thing happens for i8085erm.vhdl also for a signal in the
+port.
+
+Bug Fixed by:
+		Dale
+Date Fixed:	
+		1/26/98
+Files Modified for fixing the bug:
+(added a hash table to library_manager, and changed the interface to it.
+Lots of files modified.)
+---------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Dec 11
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: scram reports homograph error if the
+component name, entity name and the architecture name are the same. 
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+savant_tests/cmu_benchmarks/arms_counter/test_vectors_ARMS_COUNTER.vhdl
+savant_tests/cmu_benchmarks/adder64/adder64.vhdl
+savant_tests/cmu_benchmarks/adder72/adder72.vhdl
+savant_tests/cmu_benchmarks/gcd/test_vectors_GCD.vhdl
+
+Detailed description of the problem or reference to it: 
+Processing file test_vectors_ARMS_COUNTER.vhdl
+work._savant_lib/arms_counter_entity.vhdl:4: Homographs :
+arms_counter : IIR_EntityDeclaration :
+work._savant_lib/arms_counter_entity.vhdl : 4 
+and:
+arms_counter : IIR_EntityDeclaration :
+work._savant_lib/arms_counter_entity.vhdl : 4 
+are not allowed to be declared in the same declarative region.
+test_vectors_ARMS_COUNTER.vhdl:52: No architecture |arms_counter| declared
+for entity |arms_counter|. 
+test_vectors_ARMS_COUNTER.vhdl:56: |arms_counter| was not declared as a
+component in this scope. 
+aire/iir/IIRScram/IIRScram_DesignatorList.cc:242: failed assertion
+`instantiated_unit->_is_declaration() == true' 
+make: *** [test_vectors_ARMS_COUNTER.vhdl] Abort (core dumped)
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		couldn't reproduce.
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov  5
+Submitted by: Malolan Chetlur
+Priority: HIGH (Bumped up the priority from medium to HIGH on dec 3)
+Short Description of the problem: Parser does not complete parsing
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Imcomplete Parsing
+
+Reference to test case that has this problem: tc2972.vhd, tc2974.vhd
+
+Detailed description of the problem or reference to it: 
+scram prints the following message :
+Processing file tc2972.vhd
+tc2972.vhd:23: Imcompatible types in assignment: n1 := 10
+
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	Dec 5, 1997
+Files Modified for fixing the bug: 
+	vhdl.gg
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: May 22 1997
+Submitted by: Malolan C
+Priority:  HIGH (Made high from low on dec 3)
+Short Description of the Problem: Parser fails assertion in
+IIRScram_TypeDefinition. Constant declarations seen as simple names.
+
+Module : Parser fails assertion
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem: billowitch/no_err/tc251.vhd,
+	tc276.vhd, tc277.vhd, tc279.vhd , tc308.vhd
+
+Detailed description of the problem or reference to it:
+scram prints the following message :
+Processing file /work/malolan/savant_tests/billowitch/no_err//tc251.vhd
+/work/malolan/savant_tests/billowitch/no_err//tc251.vhd:9: |v1| is not a valid range.
+/work/malolan/savant_tests/billowitch/no_err//tc251.vhd:9: |v1 to v2| is an invalid range.
+scram : aire/iir/IIRScram/IIRScram_TypeDefinition.cc:1165: static class IIR_ScalarTypeDefinition * IIRScram_TypeDefinition::construct_new_type(class IIR_RangeTypeDefinition *): Assertion `retval != ((void *)0)' failed.
+Abort (core dumped)
+
+	Also type declaration whose ranges are specified by constant
+declaration instead of literals are seen as simple_names.
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	Dec 5, 1997
+Files Modified for fixing the bug: 
+	IIR_TypeDefinition.cc	
+--------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov 21
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: Index subtype of multidimensional
+arrays are not built properly. 
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: normal (but bad VHDL)
+
+Reference to test case that has this problem:
+
+billowitch/no_err/tc1073.vhd, billowitch/no_err/tc1359.vhd
+billowitch/no_err/tc1061.vhd, billowitch/no_err/tc1362.vhd
+
+Detailed description of the problem or reference to it: 
+
+It is kinda tough to say what is happening. But what I observed was that
+the second dimension of the unconstrained array is set to the index
+constraint of the derived subtype.
+
+With 3 dimensional arrays, the same as above happens. Also the 3rd
+dimension of the derived subtype is set to unconstrained range of the base
+type.
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+
+Files Modified for fixing the bug: 
+		vhdl.gg, IIRScram_ArrayTypeDefinition
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov  5
+Submitted by: Malolan Chetlur
+Priority: HIGH (bumped up from Medium to high on 3-dec)
+Short Description of the problem: problem with Null("") string literal
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Imcomple exit from parsing
+
+Reference to test case that has this problem: tc2735.vhd
+
+Detailed description of the problem or reference to it: 
+Scram prints the following message :
+
+Processing file tc2735.vhd
+tc2735.vhd:5: |""| is undefined in this scope.
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		12/3/97
+Files Modified for fixing the bug: 
+		IIRScram_StringLiteral, IIR_TextLiteral
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 22 (updated on Nov 26)
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: scram is unable to parse
+numeric_std.vhd. Couple of cases in the ashenden suite fail due to this.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/standard_libraries/numeric_std.vhd
+
+Detailed description of the problem or reference to it: 
+The following error messages are printed out:
+aire/iir/IIRScram/IIRScram_IndexedName.cc:983: failed assertion `suffix_rvals->num_elements() != 0'
+Abort (core dumped)
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		Dec 2, 1997
+Files Modified for fixing the bug: 
+(It was a problem with the test scripts as opposed to the parser.)
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 26
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem:
+  Type mark of index constraints of array subtypes are not set when the
+range constraint is a (range) type. 
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL (bad vhdl)
+
+Reference to test case that has this problem:
+billowitch/no_err/tc1089.vhd
+
+Detailed description of the problem or reference to it: 
+
+The type mark of the index constraint is not set when the range constraint
+is a user defined (range) type. This results in semantically wrong VHDL.
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		Dec 12, 1997
+Files Modified for fixing the bug: 
+		IIRScram_ArrayTypeDefinition.cc
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov 17
+Submitted by: Krishnan Subramani
+Priority: High
+Short Description of the problem: Scope of iterator in a for loop statement
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort
+
+Reference to test case that has this problem:
+~skrish/vhdl/test/function.vhdl
+
+Detailed description of the problem or reference to it: 
+
+If a for loop iterator is used within an if statement inside the for loop,
+it is not recognized.  Parser prints a message and aborts on an assert.
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	11/18/97
+Files Modified for fixing the bug: 
+	IIRScram_ForLoopStatement.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Oct 29
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: Labels for generate stmts appearing
+configuration declarations are not seen as Names
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL
+
+Reference to test case that has this problem: tc840.vhd
+
+Detailed description of the problem or reference to it: 
+In a configuration declaration while configuring a generate stmt as
+ following:
+
+configuration c1 of e1 is
+for a1
+   for blk1
+	for l1 (1 to 2)
+	    ^^^^^^^^^^^
+        end for;
+   end for;
+end for;
+end c1;
+
+	l1(1 to 2) is seen as a IIR_Label and not as a IIR_SliceName.
+Bug fixed by: 
+		Dale
+Date fixed: 
+		11/17/97
+Files Modified for fixing the bug: 
+	couldn't reproduce.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov  5
+Submitted by: DJ
+Priority: HIGH (about 80 cases)
+Short Description of the problem: Fails assertion when parsing a direct 
+                                  entity/architecture component
+                                  instantiation statement 
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+
+--------------- File #1 ---------------
+
+entity foo is
+end foo;
+
+architecture bar of foo is
+
+begin
+end bar;
+
+--------------  End File #1 -----------
+
+
+--------------- File #2 --------------
+entity box is
+end box;
+
+
+architecture blackbox of box is
+
+begin
+
+  comp1 : entity work.foo(bar);
+
+end blackbox;
+
+------------ End File #2 ------------
+
+Detailed description of the problem or reference to it:
+
+Direct component instantiation works only when the entity/architecture
+corresponding to the one with which the component is being instantiated is
+in the same VHDL source code.
+
+*** When the direct component instantiation is in a different source file
+and the entity/architecture with which the component is being instantiated
+is in another file, scram aborts with the following message :-
+
+scram: aire/iir/IIRScram/IIRScram.cc:798: class IIR_EntityDeclaration * IIRScram::_lookup_entity(bool): Assertion `decls != ((void *)0)' failed.
+Abort
+
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov  5
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: Ambiguities in predefined standard types
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Imcomplete parsing
+
+Reference to test case that has this problem: tc2759.vhd, tc2761.vhd,
+tc2767.vhd , tc2768.vhd, tc32.vhd, tc91.vhd
+
+Detailed description of the problem or reference to it: 
+Scram prints the following message :
+
+Processing file tc2759.vhd
+tc2759.vhd:9: Cannot determine unique type for |X"123456789ABCDEF"|.  Choices include:
+Type |string|, with type <array ( <ANONYMOUS> range <>  ) of character>, declared in file |/work/malolan/savant//lib/std._savant_lib/standard_package.vhdl|, line 30.
+Type |bit_vector|, with type <array ( <ANONYMOUS> range <>  ) of bit>, declared in file |/work/malolan/savant//lib/std._savant_lib/standard_package.vhdl|, line 192.
+tc2759.vhd:12: Cannot determine unique type for |X"123456789ABCDEF"|.  Choices include:
+Type |string|, with type <array ( <ANONYMOUS> range <>  ) of character>, declared in file |/work/malolan/savant//lib/std._savant_lib/standard_package.vhdl|, line 30.
+Type |bit_vector|, with type <array ( <ANONYMOUS> range <>  ) of bit>, declared in file |/work/malolan/savant//lib/std._savant_lib/standard_package.vhdl|, line 192.
+
+Bug fixed by: 
+		Nov 12, 1997
+Date fixed: 
+		Dale
+Files Modified for fixing the bug: 
+	(several different files.)
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 12
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: Type mark of index subtypes in array
+                                   type definition is not set.
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL (but bad VHDL)
+
+Reference to test case that has this problem:
+
+-- Begin Source code --
+
+entity box is
+end box;
+
+architecture blackbox of box is
+
+  type enum is (red, blue, green);
+  type arr  is array(enum) of enum;
+
+begin
+end blackbox;
+
+-- End source code --
+
+Detailed description of the problem or reference to it: 
+
+The type mark of the index in an array type definition is not set when the
+index range is of enumeration type. This cases bad VHDL to be
+published. The problem is actually seen only when the published VHDL is
+reparsed. 
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	11/12/97
+Files Modified for fixing the bug: 
+	IIRScram_TypeDefinition.cc
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Aug 25 (moved up to high priority - Nov 11)
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: if operators are overloaded, existing
+definitions are no longer visible
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Core dumped
+
+Reference to test case that has this problem:
+~ramanan/vhdl/m68/m68000.vhd
+
+Detailed description of the problem or reference to it: 
+if a function "+" is defined for bit vectors, preexisting definitions for
+"+" on integers etc are undefined in this scope.
+Also the following assertion is violated:
+aire/iir/IIRScram/IIRScram_AssociationList.cc:1005: failed assertion
+`current_formal != ((void*)0)' 
+Abort (core dumped)
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		11/11/97
+Files Modified for fixing the bug: 
+		IIRScram_Operator.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 12
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: parser is unable to disambiguate between
+two functions
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem:
+savant_tests/standard_libraries/std_logic_arith.vhdl 
+(Note: this library also has the problem that it has references of the
+type a(b(i)). I have a hacked/modified version of the library in
+~ramanan/savant_tests/myricom/) 
+
+Detailed description of the problem or reference to it:
+Although there are two distinct functions, the parser reports that it cant
+disambiguate between the functions.
+
+Here are the error messages:
+std_logic_arith.vhd:467: Can't disambiguate symbol |conv_signed| from the following choices:
+|conv_signed(arg, size)|, declared in file |std_logic_arith.vhd|, line 169.
+|conv_signed(arg, size)|, declared in file |std_logic_arith.vhd|, line 170.
+std_logic_arith.vhd:467: Umm, don't know what this |conv_signed("&", "+")| is refering to. (Doesn't seem to be a function call, slice, type conversion, or array access).
+conv_signed(arg, size)|, declared in file |std_logic_arith.vhd|, line 170.
+aire/iir/IIRScram/IIRScram_IndexedName.cc:1129: failed assertion `retval->_is_resolved() == true'
+Abort (core dumped)
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		11/11/97
+Files Modified for fixing the bug: 
+		IIRScram_ConcatenationOperator
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov  7
+Submitted by: DJ
+Priority: HIGH (about 40 cases)
+Short Description of the problem: Unable to parse overloaded operators on
+                                  user defined types/sub-types
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+
+-- Begin source code
+
+entity box is
+end box;
+
+architecture blackbox of box is
+
+  type t is (red, blue, green);
+  function "and" ( l : t; r : t) return t is
+  begin 
+    return red;
+  end "and";
+
+begin
+
+ test : process
+   variable v : t;
+ begin
+   v := red and blue;
+   wait;
+ end process;
+
+end blackbox;  
+
+-- End source code
+
+Detailed description of the problem or reference to it: 
+Scram prints the following message :
+
+scram: aire/iir/IIRScram/IIRScram_AssociationList.cc:1000: class IIR_InterfaceDeclaration * IIRScram_AssociationList::_find_declaration_in_formal(class IIR_AssociationElement *): Assertion `current_formal != ((void *)0)' failed.
+Abort
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		11/12/97
+Files Modified for fixing the bug: 
+					IIRScram_Operator.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov  6
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: parser is 
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Seg Faults
+
+Reference to test case that has this problem:
+~skrish/vhdl/savant_tests/disk/disk_test.vhdl
+
+Detailed description of the problem or reference to it: Seg faults in
+IIRScram_DesignatorList::_get_label_from_instantiate_statement because the
+get_instantiated_unit() of the component instantiation statement returns
+NULL.
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	11/7/97
+Files Modified for fixing the bug: 
+	couldn't reproduce this bug...
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 5
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: _type_check() not defined for Report
+statement.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem: 
+
+  .
+  .
+  report "rising edge of clk.";
+  .
+  .
+  
+Detailed description of the problem or reference to it: 
+
+   When parsing vhdl source(s) with report statements, scram bails out
+with the error
+
+  " _type_check() not defined for IIR node: IIR_ReportStatement "
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		11/6/97
+
+Files Modified for fixing the bug: 
+		IIRScram_ReportStatement.hh,cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov  3
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: get_subtype() of Qualified expressions
+not set
+Module: PArser/Semantic analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORT
+
+Reference to test case that has this problem: tc2501.vhd
+ Added assert, so most files having qualified expression will fail.
+Detailed description of the problem or reference to it: 
+
+Bug fixed by: DJ, Dale
+
+Date fixed: 
+  Oct 29
+Files Modified for fixing the bug: 
+  IIRBase_QualifiedExpression.cc
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Sep 12
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: the target of a signal assignment
+statement (which happens to be an aggregate with its formals being NULL)
+is incorrectly handled. 
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem: no_err/tc1309, tc1310,
+tc1316, tc1317, tc1318
+
+Detailed description of the problem or reference to it: 
+Following assert failed :
+aire/iir/IIRScram/IIRScram_AssociationElementByExpression.cc:330: 
+failed assertion `get_formal() != 0'
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+		(could not reproduce)
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 10/07/97
+Submitted by: Umesh
+Priority: HIGH
+
+Short Description of the problem:
+scram does a segmentation fault
+
+Module: parser
+-------------------------------------------------------------------------
+Type of exit when exhibiting bug: segmentation fault
+
+Reference to the test case that has this problem:
+helga:/work/urajasek/bugs_files/tc1719.vhd
+
+Detailed description of the problem or reference to it:
+segmentation fault. Guess it is due to the wait statement.
+
+Bugs fixed by:
+		Dale
+Date fixed:
+		10/29/97
+Files modified for fixing the bug:
+		IIR_ProcessStatement.cc
+-----------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Sep 10
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: subtypes of aggregates not set properly
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Seg. faults during simulation
+
+Reference to test case that has this problem: tc1087, tc1088, tc1089,
+tc1090, tc1091.
+
+Detailed description of the problem or reference to it: 
+Consider the following stmt (V1 is an array of range 1 to 5,
+			     V2 is an array of an array (5X5))
+	V1(2 to 4) := V2(3)(2 to 4);
+
+the subtype of lhs and rhs are being set to the subtype of the object
+involved. Expecting subtype to be a range constaint on the unconstrained
+array type.
+
+Bug fixed by:
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------  
+------------------------------------------------------------------------
+Date: Aug 19
+Submitted by: Krishnan Subramani
+Priority: High
+Short Description of the problem: Incorrect subtype for string literals
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: tc1208.vhd in billowitch
+test suite
+
+Detailed description of the problem or reference to it: 
+The subtype of the string "0101" in line 10 returns an unconstrined string
+type, where as it should return the anonymous base type for "wor" with the
+constrints filled in.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 9/12/97
+Submitted by: Tim McBrayer
+Priority: HIGH
+
+Short Description of the Problem: Incorrect code generation for implicit
+signals 
+
+Module: parser	
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL EXIT--c++ won't compile
+
+Reference to test case that has this problem:	
+ptsc.vhdl (savant_tests/sharc_a31/benchmarks/t35/t35.vhdl)
+
+Detailed description of the problem or reference to it:  
+
+declarative region of implicit signals is not being set.
+
+Bug fixed by:
+
+Date fixed:
+
+Files Modified for fixing the bug:
+--------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Oct 14
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: type mark of the index of an array
+subtype is not being set.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal (but not so good vhdl published)
+
+Reference to test case that has this problem: no_err/tc1031, tc1087
+
+Detailed description of the problem or reference to it: 
+Following assert failed :
+
+When the range of an unconstrained array is constrained in the array
+subtype by a user defined range, the type mark of the index is not being
+set.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov  4
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: entity_name_list of attribute
+specifications are not resolved
+Module: Parser/Semantic Analyzer / code-generator
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORt
+
+Reference to test case that has this problem: tc2565.vhd
+
+Detailed description of the problem or reference to it: 
+	The get_name() of the  IIR_DesignatorList (entity_name_list), of
+attribute specification is not resolved. It is seen as an IIR_SimpleName.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	IIRScram_SubtypeDeclaration.hh, IIRScram_SubtypeDeclaration.cc
+comments : Added the missing function,
+_get_attribute_specification_list(), that was reported undefined.
+------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date:	May 20 97
+Submitted by: Malolan C
+Priority: Medium
+
+Short Description of the Problem: IIR_ElementDeclaration seen as IIR_SimpleName
+
+Module:	PARSER
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Build fails
+
+Reference to test case that has this problem: billowitch/no_err/tc2421.vhd
+
+Detailed description of the problem or reference to it: The element
+declarations of a record type definition are seen as simple names.
+
+Bug fixed by:
+
+Date fixed:
+
+Files Modified for fixing the bug:
+	Bug does not appear now (nov 3rd)	
+--------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Sep 14
+Submitted by: Radharamanan Radhakrishnan
+Priority: MEDIUM
+Short Description of the problem: type conversion functions in the
+association list of subprograms are not handled by scram
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: gives an error
+
+Reference to test case that has this problem: no_err/tc146.vhd, tc154.vhd
+
+Detailed description of the problem or reference to it: 
+
+Bug fixed by: 
+
+Date fixed:
+
+Files Modified for fixing the bug: 
+
+Comments : The bug does not appear now(Nov 1)
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Sep 14
+Submitted by: Radharamanan Radhakrishnan
+Priority: MEDIUM
+Short Description of the problem: 
+get_primary_unit() in PhysicalTypeDefinition returned NULL.
+added an assert to catch this.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: seg. fault
+
+Reference to test case that has this problem: no_err/tc15.vhd
+
+Detailed description of the problem or reference to it: 
+
+Bug fixed by: 
+
+Date fixed:
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Sep 14
+Submitted by: Radharamanan Radhakrishnan
+Priority: MEDIUM
+Short Description of the problem: when publishing a condition clause of a
+case statement, the subtype of a string literal is found to be NULL. This
+caused a segmentation fault.  
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: seg. faults
+
+Reference to test case that has this problem: no_err/tc1495.vhd
+
+Detailed description of the problem or reference to it: 
+when publishing the following line:
+	case string_4'(str(1 to 4)) is
+_publish_cc_condition() in StringLiteral seg. faults, because the subtype of
+the string literal is NULL. Added an assert to catch this.
+Bug fixed by: 
+
+Date fixed:
+
+Files Modified for fixing the bug: 
+
+comment :  Don't know when it got fixed
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 19
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: Doesn't complete parsing 
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL EXIT, MAKE failed
+
+Reference to test case that has this problem: tc1942.vhd
+
+Detailed description of the problem or reference to it: 
+	When called scram on the file tc1942.vhd, it gives the 
+following message:
+	_get_rval() not defined for IIR node: IIR_QualifiedExpression
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 13
+Submitted by: Ardhendu Singh
+Priority: MEDIUM
+Short Description of the problem: published code with function declaration
+gives segmentation fault. 
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Segmentation fault 
+
+Reference to test case that has this problem:
+billowitch/no_err/tc1011.vhd
+
+Detailed description of the problem or reference to it: 
+Published code of tc1011.vhd gives seg fault on parsing. But if the 
+declaration on line 6 in published code is moved to at line 10 i.e.
+before function definition then it parses and publishes.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 13
+Submitted by: Ardhendu Singh
+Priority: HIGH
+Short Description of the problem: _get_resolution_function is not set 
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal but incorrect vhdl code is published
+
+Reference to test case that has this problem:
+billowitch/no_err/tc483.vhd
+
+Detailed description of the problem or reference to it: 
+While publishing the subtype declaration with resolution function, it 
+publishes it without resolution function, which on subsequent publishing
+gives assertion fail.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 14
+Submitted by: Ardhendu Singh
+Priority: MEDIUM
+Short Description of the problem: get_expression is not set 
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort 
+
+Reference to test case that has this problem:
+billowitch/no_err/tc1766.vhd
+
+Detailed description of the problem or reference to it: 
+get_expression() in IIRScram_CaseStatement.cc is returning null.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 08
+Submitted by: Ardhendu Singh
+Priority: HIGH
+Short Description of the problem: Parsing Error, function is not getting
+resolved.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem:
+billowitch/no_err/tc3185.vhd
+
+Detailed description of the problem or reference to it:
+Function call write(l, integer'(1994)) while publishing get published
+with its default argument and association list as:
+write(l=>l, value=>integer'(1994), justified=>right, field=>0);
+While parsing this function call, it print the following message:
+
+"Can't disambiguate symbol |write| from the following choices:"
+There are eight overloaded write function in savant/lib/
+std._savant_lib/textio_package.vhdl|
+
+Bug fixed by:
+
+Date fixed:
+
+Files Modified for fixing the bug:
+
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date:	May 19 97
+Submitted by: SK
+Priority: MEDIUM
+
+Short Description of the Problem: Scoping of Constant declarations.
+returns NULL
+Module:	PARSER
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: IMPROPER RESULTS.
+
+Reference to test case that has this problem: billowitch/no_err/tc884.vhd
+
+Detailed description of the problem or reference to it:
+If a constant is declared in the architecture and the process declarative
+part with the same name, any "implicit" reference to the constant within
+the process statement part must refer to the one declared in the process
+declarative part.  This does not happen.  The value of the constant is the
+value in the delcarative region of the architecture.
+
+Bug fixed by:
+
+Date fixed:
+
+Files Modified for fixing the bug:
+
+--------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: July 1 1997
+Submitted by: Umesh Kumar Rajasekaran
+Priority: MEDIUM
+Short Description of the Problem: value in constant declaration pointing
+to AssociationElementByExpression
+Module: PARSER
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: publish-vhdl publishing incorrect vhdl
+code 
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc2428.vhd
+
+Detailed description of the problem or reference to it:
+	For the statement below in VHDL, the parser is constructing nodes
+like this.
+	type rec is record
+                        ele_1 : real;
+                        ele_2 : real;
+                   end record;
+       constant p  :rec := (ele_1 | ele_2 => 4.5);
+
+       For this constant p :rec := (ele_1 | ele_2 => 4.5); 
+	value in ConstantDeclaration is pointing to
+IIR_AssociationElementByExpression. Actually it should point to
+IIR_Aggregate. 
+
+Bug fixed by :
+
+Date fixed:
+
+Files Modified for fixing the bug:
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: July 10 1997
+Submitted by: Umesh Kumar Rajasekaran
+Priority: MEDIUM
+Short Description of the problem: entity_class in attribute specification
+always NULL.
+Module: PARSER
+------------------------------------------------------------------------
+Type of exit when exhibiting the bug: assertion failed for publish-vhdl
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc100.vhd
+
+Detailed description of the problem or reference to it:
+	suppose you have a statement like this
+        attribute pin_number of P2 : signal is 1
+
+	entity_class is IIR_Identifier and should contain "signal". But it
+is always NULL.
+
+Bug fixed by:
+
+Date fixed:
+
+Files modified for fixing the bug:
+
+-------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 19
+Submitted by: Radharamanan Radhakrishnan
+Priority: Medium
+Short Description of the problem: EnumerationLiteral is getting resolved
+as a SimpleName
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: incorrect publishing
+
+Reference to test case that has this problem: billowitch/no_err/tc1576.vhd
+
+Detailed description of the problem or reference to it: 
+Inside a for loop, if i have the stmt, "next when FALSE;", FALSE gets read
+as a SIMPLE name instead of an enumeration literal.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+----------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun  18
+Submitted by: Narayanan Thondugulam
+Priority: Medium
+Short Description of the problem: _get_rval() not defined for IIR Node
+IIR_FloatingPointLiteral
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal
+
+Reference to test case that has this problem: ~nthondug/vhdl/my_std.vhd
+
+Detailed description of the problem or reference to it: 
+While recording the vhdl file with an ignore-standard-library option I get
+an error message _get_rval() not defined for IIR_FloatingPointLiteral.  
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+------------------------------------------------------------------------
+-----------------------------------------------------------------------
+Date: Oct 10
+Submitted by: Krishnan Subramani
+Priority: High
+Short Description of the problem: Default arguments of functions not
+filled in.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal
+
+Reference to test case that has this problem: tc1071.vhd
+
+Detailed description of the problem or reference to it: 
+For a function with default arguments in it's declaration, the function
+call should contain all the arguments, irrespective of whether they are
+given explicitly, or taken implicitly from the function declaration.
+
+If the function call does not contain all the arguments, the default
+values from the function declaration must be taken.
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		10/16/97
+Files Modified for fixing the bug: 
+		IIRScram_FunctionCall.ccc IIRScram_ProcedureCallStatement.cc
+------------------------------------------------------------------------
+---------------------------------------------------------------------------
+Date: 10/10/97
+Submitted by: Umesh
+Priority: HIGH
+
+Short Description of the problem: 
+scram giving warning and aborting
+
+Module: parser
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: abort
+
+Reference to test case that has this problem: 
+helga:/work/urajasek/bugs_files/tc3110.vhd
+
+Detailed description of the problem or reference to it:
+when a default port map is published, the scram gives a warning
+that it has no default value and aborts
+
+Bugs fixed by:
+		Dale
+Date fixed:	
+	10/16/97
+Files modified for fixing the bug:
+	IIRScram_AssociationList.cc
+-------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Oct 10
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Incorrect resolution of instantiation
+list elements in a configuration specification
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: tc1010.vhd
+
+Detailed description of the problem or reference to it: 
+The elements of the designator list in a configuration specification
+statement are getting resolved as IIR_SimpleName's instead of
+declarations.  
+
+Code generation aborts while publishing in
+IIRScram_ArchitectureDeclaration::_publish_cc_object_pointers_init()
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	can't reproduce...
+------------------------------------------------------------------------
+-----
+------------------------------------------------------------------------
+Date: Jun 13
+Submitted by: Krishnan Subramani
+Priority: Low
+Short Description of the problem: Parse fails in attribute specification
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: t53.vhdl in sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+scram (without -publish-cc) aborts with the following message:
+Processing file t53.vhdl
+|std_ulogic| and |string_attr| aren't compatible, and therefore make an invalid qualified expression.
+|std_ulogic| is undefined in this scope.
+|std_ulogic| and |string_attr| aren't compatible, and therefore make an invalid qualified expression.
+|std_ulogic| is undefined in this scope.
+util/resolution_func.cc:316: failed assertion `argument_rvals != 0'
+Abort
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	(couldn't be reproduced)
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: May 27
+Submitted by: Radharamanan Radhakrishnan
+Priority: Medium
+
+Short Description of the problem: Access types incorrectly handled
+
+Module: PARSER
+------------------------------------------------------------------------
+
+
+Type of exit when exhibiting bug: Core dumped
+
+Reference to test case that has this problem:sharc_a31/benchmarks/t47/t47.vhdl
+
+Detailed description of the problem or reference to it: 
+Access types are not correcly handled. I get the following error messages:
+
+_get_rval_set( set<IIR_Declaration> * ) not defined for IIR node:
+IIR_DesignatorByAll 
+
+t47.vhdl:23: |count.all| is undefined in this scope.
+_get_rval_set( set<IIR_Declaration> * ) not defined for IIR node:
+IIR_DesignatorByAll 
+
+t47.vhdl:25: |count.all| is undefined in this scope.
+aire/iir/IIRScram/IIRScram_Operator.cc:118: failed assertion
+`_is_resolved() == true' 
+
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	(couldn't be reproduced)
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Oct 10
+Submitted by: Krishnan Subramani
+Priority: High
+Short Description of the problem: Scram can not identify the label.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: tc1205.vhd
+
+Detailed description of the problem or reference to it: 
+Scram (without -publish-cc) generates the following error message:
+
+	tc1205.vhd:156: |t1| is undefined in this scope.
+
+following this, it aborts during code-generation because the symbol |t1|
+is not resolved.
+
+Bug fixed by: Dale
+
+Date fixed: 10/14/97
+
+Files Modified for fixing the bug: 
+	(many)
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Sep 18
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: Analyzer blows up while parsing
+component instantiations; when named associations are used in type
+conversion function calls.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: tc3068, tc3079 (and 92
+others)
+
+NOTE : The problem pops up when reparsing the published vhdl code.
+----   see file ~dmadhava/savant_test/TCTCs (for others)
+
+While parsing the published vhdl code (with formals in function calls) 
+scram aborts with the following error.
+
+scram: aire/iir/IIRScram/IIRScram_AssociationList.cc:469: class IIR_Name *
+IIRScram_AssociationList::_get_formal_or_actual_from_indexed_name(class 
+IIR_IndexedName *): Assertion `temp->_is_name() == true' failed.  
+Abort
+
+Bug fixed by: DJ
+
+Date fixed: 9 Oct
+
+Files Modified for fixing the bug: 
+
+IIRScram_AssociationList.hh, IIRScram_AssociationList.cc
+IIRScram_AssociationElementByExpression.hh,
+IIRScram_AssociationElementByExpressionn.cc,
+IIRScram_AssociationElement.hh, IIRScram_AssociationElement.cc,
+IIRScram_FunctionCall.cc, IIRScram_ProcedureCallStatement.cc
+
+Comments:
+
+  Publishing of formals in type conversion functions was illegal
+syntax. Also publishing of formals was screwing up other test cases. So
+decided to supress formals once and for all (As discussed with Dale).
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Sep 28
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: Component Configurations within Blocks not being resolved
+Module: PARSER/ Semantic Analyzer
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: Aborts during code-generation
+
+Reference to test case that has this problem: tc837.vhd of billowitch
+
+Detailed description of the problem or reference to it: 
+
+For the following VHDL- code:
+
+...
+configuration C1 of E1  is
+    for A1
+        for DBLK
+            for LS : FOUR use entity work.E2(A2);
+		    ^^^^^^
+            end for;
+        end for;
+    end for;
+end C1;
+	The component FOUR is not properly resolved. It is seen as a
+simple name. This problem appears if the component that is configured is
+instantiated within a block statement. This case doesn't arise if a
+component is instantiated in an architecture declaration. Yet to check for
+a case containing a component instantiation in a generate statement and
+being configured in the configuration declaration.
+
+Bug fixed by: Dale
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+can't confirm problem - don't know when it was fixed.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Sep 29
+Submitted by:  DJ
+Priority: HIGH
+Short Description of the problem: type mark of aggregates not set.
+Module: PARSER/ Semantic Analyzer
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: Aborts during code-generation
+
+Reference to test case that has this problem:
+
+Detailed description of the problem or reference to it: 
+
+For the following VHDL- code:
+
+architecture blackbox of box is
+
+  type arr is array (1 to 5) of integer;
+
+begin
+  process
+    v : arr;
+  begin
+    v(1 to 2) = (1, 2);
+    wait;
+  end process;
+
+end blackbox;
+
+
+  The sub-type of the aggregate is anonymous and so is its base type. Here
+type mark for the aggregate is expected but is not being set.
+
+Bug fixed by: Dale
+
+Date fixed: Oct 8, 1997
+
+Files Modified for fixing the bug: 
+	IndexedName.cc (_build_slice)
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Oct 7
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: The formals and actuals in a
+configuration specification statement have the same IIR * when default
+associations are to be used.
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL EXIT
+
+Reference to test case that has this problem: 
+savant_tests/internal_tests/no_err/scoping_prefix.vhdl
+
+Detailed description of the problem or reference to it: 
+
+  The formals and actuals in configurations specification statement get
+the same IIR*, when default port map associations are assumed. The IIR *'s
+for the formals and actuals in the port map associations should correspond
+to the real formals and actuals. Now, both (formal & actual) get the same
+IIR * (that of the formals). This causes lots of problems with mangling in
+place. (Ofcourse, the code generators had asked to have the default port
+map associations to be filled)
+
+Bug fixed by: Dale
+	
+Date fixed: 10/8/97
+
+Files Modified for fixing the bug: 
+	resolution_func.cc
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 10/7/97
+Submitted by: Tim McBrayer
+Priority: HIGH
+
+Short Description of the Problem:
+_publish_cc_scoping_prefix(IIR *, ostream& = _cc_out) not defined for 
+IIR node: IIR_ArchitectureDeclaration
+
+Module:	code generator
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug:  NORMAL EXIT
+
+Reference to test case that has this problem:	
+savant_tests/internal_tests/no_err/scoping_prefix.vhdl
+
+Detailed description of the problem or reference to it:
+When attempting to generate c++ for the testcase via:
+scram -publish-cc scoping_prefix.vhdl
+
+the referenced testcase completes 'successfully', but throws the error
+
+genfail.vhdl:5: _publish_cc_scoping_prefix(IIR *, ostream& = _cc_out) not
+defined for IIR node: IIR_ArchitectureDeclaration
+
+during code generation.  If the reference to 'h' on line 12 is removed,
+the error goes away.  'h' is a port reference--any reference to 'h' causes
+the failure.  
+
+What code is generated does not compile.
+
+Bug fixed by: DJ
+
+Date fixed: 10/7/97
+
+Files Modified for fixing the bug:
+  IIRScram_ArchitectureDeclaration.hh
+  IIRScram_ArchitectureDeclaration.cc
+
+Comments:
+  Added empty function _publsih_cc_scoping_prefix() to suppress an error
+message from popping up. This does not actually fix the problem reported
+by Tim. Entered a bug about the other problem(s) seen.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Sep 17
+Submitted by: Dhananjai Madhava Rao
+Priority: HIGH
+Short Description of the problem: Homograph errors while parsing.
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts in parsing.
+
+Reference to test case that has this problem:
+
+-- Simple example [BEGIN]
+entity box is
+end entity foo;
+
+architecture bar of box is
+
+  procedure foo;
+  procedure foo is begin end foo;
+
+end architecture bar;
+--example [END]
+
+Detailed description of the problem or reference to it: 
+
+Scram bails out with homograph errors while parsing even simple cases as
+shown above. This code is the fundamental for checking if the new feature
+works properly. Without this bug fixed testing of vhdl publishing of
+subprograms cannot even start off.
+
+Bug fixed by:
+		Dale
+Date fixed: 
+		9/17/97
+Files Modified for fixing the bug: 
+		vhdl.gg symbol_table.cc
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Sep 10
+Submitted by: Dale
+Priority: High
+Short Description of the problem: _build_sensitivity_list not defined
+  for several different IIR nodes.
+Module: transmuter
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: warning messages produced
+
+Reference to test case that has this problem:
+billowitch: 
+no_err/run_err/tc78.vhd, no_err/tc1753.vhd,
+no_err/tc1776.vhd, no_err/tc3034.vhd, no_err/tc3040.vhd,
+no_err/tc3041.vhd, no_err/tc3042.vhd, no_err/tc753.vhd,
+
+Detailed description of the problem or reference to it: 
+When libraries are being written, transmute gets called (this probably
+warrants another bug report on its own) and this method is not defined
+for several different types of nodes.
+
+Bug fixed by: Malolan C
+
+Date fixed: 
+	10/Sept/97
+Files Modified for fixing the bug: 
+
+IIRScram_IndexedName.cc IIRScram_IndexedName.hh IIRScram_Name.cc
+IIRScram_Name.hh IIRScram_OthersInitialization.cc
+IIRScram_OthersInitialization.hh IIRScram_QualifiedExpression.cc
+IIRScram_QualifiedExpression.hh IIRScram_SelectedWaveform.cc
+IIRScram_TypeConversion.cc IIRScram_TypeConversion.hh 
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Sep 10
+Submitted by: Radharamanan Radhakrishnan
+Priority: MEDIUM
+Short Description of the problem: parser hits an assertion in vhdl.cc and
+bails out.
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: no_err/tc1073.vhd
+
+Detailed description of the problem or reference to it: 
+fails the following assert :
+scram/vhdl.cc:8973: failed assertion `element_as_array->_is_unconstrained_array_type() == true'
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	9/9/97
+Files Modified for fixing the bug: 
+	vhdl.gg
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date:	18/April/97
+Submitted by: SK
+Priority: HIGH
+
+Short Description of the Problem:
+IIRScram_SubtypeDeclaration::get_subtype()->get_base_type() returns NULL.
+Module:	PARSER
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORTS
+
+Reference to test case that has this problem: savant_tests/sharc_a31/benchmarks/t126/t26.vhdl
+
+Detailed description of the problem or reference to it:
+Fails assertion at IIRScram_SubtypeDeclaration_publish_cc_decl() :
+
+  ASSERT(get_subtype()->get_base_type() != NULL);
+
+because IIR_SubtypeDeclaration::get_subtype()->get_base_type() returns
+NULL. 
+
+Bug fixed by:
+	Dale
+
+Date fixed:
+	?
+
+Files Modified for fixing the bug:
+	?
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 14 Aug 1997
+Submitted by: Ardhendu Singh
+Priority: HIGH
+Short Description of the problem: _is_resolved() is not set in some cases
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Assertion failure
+
+Reference to test case that has this problem:
+billowitch/no_err/tc1327.vhd
+
+Detailed description of the problem or reference to it:
+_is_resolved() is not set in IIRScram_Aggregate.cc
+
+Bug fixed by:
+	Dale
+
+Date fixed:
+	Around 9/1/97
+
+Files Modified for fixing the bug:
+	don't know
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 14 Aug 1997
+Submitted by: Ardhendu Singh
+Priority: HIGH
+Short Description of the problem: get_entity_class is not set 
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Assertion failure
+
+Reference to test case that has this problem:
+billowitch/no_err/tc100.vhd
+
+Detailed description of the problem or reference to it:
+get_entity_class() is not set in IIRScram_AttributeSpecification.cc
+
+Bug fixed by:
+	Dale
+Date fixed:
+	Sometime around 9/1/97
+Files Modified for fixing the bug:
+	vhdl.gg
+--------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 26
+Submitted by: Krishnan Subramani
+Priority: High
+Short Description of the problem: left and right in index constraints
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal
+
+Reference to test case that has this problem: tc758.vhd
+
+Detailed description of the problem or reference to it: 
+The left and right of index subtypes are set incorrectly.  in tc758.vhd,
+though the index subtype is "natural" left returns "-2147483648", which is
+the left of the base type of "natural", "integer".  left for natural
+should actually return 0.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	Sometime around 9/1/97
+
+Files Modified for fixing the bug: 
+	Got fixed in the latest type reorganization.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jul 8, 1997
+Submitted by: Tim McBrayer
+Priority: MEDIUM
+Short Description of the problem: sensitivity lists built incorrectly 
+during transmogrification of ConcurrentConditionalSignalAssignments
+Module: Transmogrifier
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal exit, incorrect IIR built
+
+Reference to test case that has this problem: ptsc.vhdl
+
+Detailed description of the problem or reference to it: 
+The fundamental logic behind the creation of the sensitivity list for a
+ConcurrentSignalAssignment, either Conditional (as in ptsc.vhdl) or
+Selected, is flawed.  At each point whn a SignalDeclaration might be added
+to the sensitivity_list, it is checked to ensure that it's not in the list
+yet.  If it's not, a DesignatorExplicit is created and inserted into the
+list.  Since the list contains DesignatorExplicits, checking to see if a
+SignalDeclaration is in the list will never find it, even if a designator
+has been created for it.
+
+At least IIRScram_SignalDeclaration and
+IIRScram_SignalInterfaceDeclaration will need to be fixed.
+
+Bug fixed by: Tim McBrayer
+
+Date fixed: Jul 8, 1997
+
+Files Modified for fixing the bug: 
+IIRScram_SignalDeclaration.cc, IIRScram_SignalInterfaceDeclaration.cc
+
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 7/2/97
+Submitted by: Dale
+Priority:  LOW
+Short Description of the Problem: Incorrect VHDL publishing of slices
+Module : Parser
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: NORMAL
+
+Reference to test case that has this problem: Any VHDL with a slice in
+it.
+
+Detailed description of the problem or reference to it:
+VHDL publishing of slices gives strange results - for instance,
+x(1 to 3) will get published as x(integer) or something.
+
+Bug fixed by: SK
+
+Date fixed: May 4 1996
+
+Files Modified for fixing the bug:
+
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: May 27 1997
+Submitted by: SK
+Priority: HIGH
+
+Short Description of the Problem: t35.vhdl produces incorrect results.
+
+Module:	Code generator
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: INCORRECT RESULTS
+
+Reference to test case that has this problem: sharc_a31/benchmarks/t35/t35.vhdl
+
+Detailed description of the problem or reference to it:
+t35.out is not the same as t35.out.good.  Only 10 lines of output is
+generated.
+
+Bug fixed by: SK
+
+Date fixed: May 28
+
+Files Modified for fixing the bug:
+
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: 3/22/97
+Submitted by: Ramanan
+Priority:  HIGH
+Short Description of the Problem: procedure definition within a process
+statement is not handled.
+Module : Code generator
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc1180.vhd
+
+Detailed description of the problem or reference to it:
+If a procedure is defined within the declarative part of a process
+statement, the code generator currently ignores the definition. So when
+ultimately the procedure is called, it will end up as a linker error as
+the procedure is not defined anywhere.
+
+Bug fixed by: Mal
+
+Date fixed: May 05 1997
+
+Files Modified for fixing the bug: 
+        IIRScram_DeclarationList.hh IIRScram_DeclarationList.cc 
+        IIRScram_ProcessStatement.cc 
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 3/23/97
+Submitted by: Ramanan
+Priority:  HIGH
+Short Description of the Problem: subtypes of subtypes are not published
+correctly.
+Module : Code generator
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc14.vhd, 
+
+Detailed description of the problem or reference to it:
+
+subtype declarations of the following form :
+    subtype sub1 is integer;
+    subtype sub2 is sub1;    
+
+are incorrectly handled. The publishing of the Savantsub1Type.hh & .cc
+files gets totally confusing with wrong subtypes in the wrong place.
+
+Bug fixed by: SK
+
+Date fixed: May 27 1997
+
+Files Modified for fixing the bug: 
+I did not fix this bug explicitly.  It was a parser problem, and was
+resolved when the nodes were "resolved" properly.
+
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 3/23/97
+Submitted by: Ramanan
+Priority:  HIGH
+Short Description of the Problem: data type Natural not defined currently.
+Module : Code generator
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc16.vhd
+
+the above test case has a subtype of Natural and has instances of
+Natural'high and Natural'right which are currently undefined. Code gets
+published without these values being defined and the build fails because of
+these incomplete types.
+
+Detailed description of the problem or reference to it:
+
+Make fails due to the non-existance of savantEqual and savantNotEqual for
+savant character types.
+
+Bug fixed by: SK
+
+Date fixed: May 27 1997
+
+Files Modified for fixing the bug: 
+I did not fix this bug explicitly, but this bug is not exhibited anymore.
+
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 3/23/97
+Submitted by: Ramanan
+Priority:  HIGH
+Short Description of the Problem: variable declared within a process's
+declarative region and used within a wait statement's condition clause
+doesn't get published.
+Module : Code generator
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc1214.vhd, 
+~ramanan/research/savant_tests/billowitch/no_err/tc1218.vhd
+
+Detailed description of the problem or reference to it:
+if the wait condition turns out be like : 
+
+wait on sig1 until x >= 12 for 20 ns;
+
+Even though x is declared as an integer and initialized to zero in the
+process's declarative region, the code generator doen't publish x as being
+part of the state. So when the wait condition is called to evaluate the
+condition, s->x where s is the state doesn't exist ! 
+
+Bug fixed by: Malolan C
+
+Date fixed: 24/march/97
+
+Files Modified for fixing the bug: 
+ src/aire/iir/IIRScram/IIRScram_ConstantDeclaration.cc
+ src/aire/iir/IIRScram/IIRScram_GenericList.cc
+ src/aire/iir/IIRScram/IIRScram_ScalarTypeDefinition.cc
+ src/aire/iir/IIRScram/IIRScram_VariableDeclaration.cc
+ src/aire/iir/IIRScram/IIRScram_VariableInterfaceDeclaration.cc
+
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: 3/23/97
+Submitted by: Ramanan
+Priority:  HIGH
+Short Description of the Problem: constants within generic statements are
+currently not getting published as part of the state.
+Module : Code generator
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc131.vhd, 
+
+Detailed description of the problem or reference to it:
+
+Entity declarations of the following form :
+
+ENTITY c04s03b02x01p04n01i00131ent IS
+   generic ( constant c1 : integer := 9090 );
+END c04s03b02x01p04n01i00131ent;
+
+are incorrectly handled. The constant c1 is not getting published as being
+part of the state.
+
+Bug fixed by: Malolan C
+
+Date fixed: 24/March/97
+
+Files Modified for fixing the bug: 
+ src/aire/iir/IIRScram/IIRScram_ConstantInterfaceDeclaration.cc
+ src/aire/iir/IIRScram/IIRScram_ConstantInterfaceDeclaration.hh
+ src/aire/iir/IIRScram/IIRScram_GenericList.cc
+ src/aire/iir/IIRScram/IIRScram_ScalarTypeDefinition.cc
+
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: 3/23/97
+Submitted by: Ramanan
+Priority:  HIGH
+Short Description of the Problem: savantEqual, savantNotEqual not defined
+for SavantcharacterType.
+Module : Code generator
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc1493.vhd, 
+
+Detailed description of the problem or reference to it:
+
+Make fails due to the non-existance of savantEqual and savantNotEqual for
+savant character types.
+
+Bug fixed by: Malolan C
+
+Date fixed: 23/March/97
+
+Files Modified for fixing the bug: 
+	IIRScram_Choice.cc IIRScram_Literal.cc IIRScram_Literal.hh 
+        IIRScram_StringLiteral.cc IIRScram_StringLiteral.hh 
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 3/21/97
+Submitted by: Ramanan
+Priority:  MEDIUM
+Short Description of the Problem: type declaration within a process's 
+declarative region is not handled.
+statement. 
+Module : Code generator
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc1487.vhd
+
+Detailed description of the problem or reference to it:
+when a process of the following type is encountered :
+
+ARCHITECTURE c08s08b00x00p04n03i01487arch OF c08s08b00x00p04n03i01487ent IS
+
+BEGIN
+   TESTING: PROCESS
+    type     t_enum1 is (en1, en2, en3, en4);
+
+the type declaration is not published. As a result, Savantt_enum1Type.hh 
+is never generated, but is included as a header file. This should fix
+a whole bunch of cases in the billowitch suite.
+
+Bug fixed by: SK (skrish@ececs.uc.edu)
+
+Date fixed: Mar 12 1997
+
+Files Modified for fixing the bug: IIRScram_ProcessStatement.cc
+
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date:	 29/jan/97
+Bug submitted: SK    
+Priority: LOW
+Short Description of the Problem:  Improper resolution in the front end
+Module: semantic checker
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug:
+NORMAL EXIT
+
+Reference to test case that has this problem: 
+work/malolan/iscas1_h/iscas1_h.vhdl
+
+Detailed description of the problem or reference to it:
+
+In component instatiation (configuration specification is what was supposed
+to be listed here) statement, component name getting resolved to IIR_SimpleName
+instead of IIR_ComponentDeclaration.
+
+Bug Fixed By:
+Dale E. Martin
+
+Date fixed: 2/11/97
+
+Files Modified for fixing the bug:
+IIR_ConfigurationSpecification.
+--------------------------------------------------------------------------
+
+Date: 2/5/97
+Submitted by: Dale
+Priority:  LOW
+Short Description of the Problem:
+A VHDL publishing bug in IIR_ProcedureDeclaration
+--------------------------------------------------------------------------
+
+Module:	vhdl publisher 
+
+Type of exit when exhibiting bug: 
+NORMAL EXIT
+
+Reference to test case that has this problem:	
+(any file with a procedure declaration)
+
+Detailed description of the problem or reference to it:
+when publishing "end procedure <name>", <name> is printed as
+the pointer address.
+
+Bug fixed by: SK (skrish@ece.uc.edu)
+
+Date fixed: 2/5/97
+
+Files Modified for fixing the bug: IIRScram_ProcedureDeclaration.cc
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 2/20/97
+Submitted by: SK
+Priority: VERY HIGH
+
+Short Description of the Problem:
+get_entity_aspect() of configuration specification returns an entity
+declaration instead of an architecture declaration.
+
+Module:	parser / semantic checker 
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL EXIT & IMPROPER RESULT
+
+Reference to test case that has this problem:	Any example with component
+instantiation and configuration specification statements.
+
+Detailed description of the problem or reference to it:
+Same as above.
+
+Bug fixed by: Dale Martin
+
+Date fixed: 2/21/97
+
+Files Modified for fixing the bug:
+vhdl.gg
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date:	02/28/97
+Submitted by: Malolan C
+Priority: VERY HIGH 
+
+Short Description of the Problem:
+	The actuals in a Component Instantiation statement are not
+resolved properly. 
+Module:	
+( parser / semantic checker  )
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: 
+(  IMPROPER RESULT )
+	The Generated Code gives Parse Error.
+
+Reference to test case that has this problem:	
+	savant_tests//sharc_a31/benchmarks/t33
+	savant_tests//sharc_a31/benchmarks/t34
+
+Detailed description of the problem or reference to it:
+	In port_map_aspect of component instantitiation statement, the
+get_actual() on its elements return IIR_*TypeDefinition instead of derived
+class of IIR_ObjectDeclaration.
+
+Bug fixed by:
+Dale
+
+Date fixed: 3/4/97
+
+Files Modified for fixing the bug:
+IIR_ComponentInstantiationStatement.cc
+
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: 3/17/97
+Submitted by: Ramanan
+Priority:  MEDIUM
+Short Description of the Problem: get_base_type() returns NULL
+Module : Parser
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: SEGMENTATION FAULT
+
+Reference to test case that has this problem:
+/work/ramanan/savant_tests/array_attributes/test.vhdl (on olympus)
+
+Detailed description of the problem or reference to it:
+When user defined type is defined of the form:
+type A is array(1 to 10, 5 downto 1) of integer;, then during the code
+generation of SavantaType.hh,
+IIRScram_ArraySubTypeDefinition::_publish_cc_type_name is called. In this
+function get_base_type() returns NULL.
+
+Bug fixed by:
+Dale
+
+Date fixed: 3/18/97
+
+Files Modified for fixing the bug:
+vhdl.gg
+
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: 3/19/97
+Submitted by: SK
+Priority:  MEDIUM
+Short Description of the Problem: Incorrect value of integer literal with
+exponent. 
+Module : Parser
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+/work/ramanan/savant_tests/billowitch/no_err/tc2567.vhd
+
+Detailed description of the problem or reference to it:
+for an integer literal, say "2E3", 
+	_get_mantissa() returns "2E3", and
+	_get_exponent() returns NULL, whereas,
+	_get_mantissa() should return "2", and
+	_get_exponent() should return "3".
+This also means that this bug WILL NOT show up with a -publish-vhdl.
+
+Bug fixed by: Dale
+
+Date fixed: Mar. 25
+
+Files Modified for fixing the bug: vhdl.gg
+--------------------------------------------------------------------------
+Priority:  HIGH
+Short Description of the Problem: publishing of the wait condition goes
+terribly wrong if the wait condition turns out to TRUE or FALSE
+Module : Parser/Code generator
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc1211.vhd
+
+Detailed description of the problem or reference to it:
+if the wait condition turns out be like : 
+
+wait on A until (FALSE) for 20 ns;
+
+then get_condition_clause() for the wait statement returns a reference to
+a IIRScram_SimpleName. Hence IIRScram_SimpleName's _publish_cc_wait_data()
+is called and s->false is published instead of SAVANT_BOOLEAN_FALSE.
+
+Bug fixed by: Dale
+
+Date fixed: 3/25/97
+
+Files Modified for fixing the bug: IIRScram_WaitStatement.cc
+
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 3/17/97
+Submitted by: SK
+Priority:  MEDIUM
+Short Description of the Problem: Pure Virtual method called in an element
+of IIR_DesignatorList
+Module : Parser
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: pure virtual method called.
+
+Reference to test case that has this problem:
+/work/skrish/savant_tests/sharc_a31/benchmarks/t27/t27.vhdl
+
+Detailed description of the problem or reference to it:
+In IIRScram_DesignatorList::_get_list_of_input_signals(), when 
+	element->_get_list_of_input_signals(list) is called, 
+stops execution with the following message:
+	pure virtual method called
+
+Bug fixed by: Dale
+
+Date fixed: 3/27/97
+
+Files Modified for fixing the bug:
+IIRScram_ProcessStatement.cc - in a code generation method - this was NOT 
+a parser bug.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date:	3/27/97
+Submitted by: Tim McBrayer
+Priority: ( MEDIUM )
+
+Short Description of the Problem:
+	UseClause is not getting resolved.
+Module:	
+	 parser 
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: 
+        ASSERTION VIOLATION
+
+Reference to test case that has this problem:
+        Any VHDL that contains a USE clause.
+
+Detailed description of the problem or reference to it:
+        When attempting to call _publish_vhdl() on a USE clause, scram
+catches an assertion in IIRScram_SelectedName::_publish_vhdl.  the
+assertion is (_is_resolved() == TRUE).  From this, it appears as if the
+UseClause is not getting resolved.
+
+Bug fixed by: Dale
+
+Date fixed: 3/28/97
+
+Files Modified for fixing the bug:
+IIR_UseClause.cc
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date:	27/March/97
+Submitted by: Malolan
+Priority: ( HIGH)
+
+Short Description of the Problem: Configurtion specifications
+get_entity_aspect(),do not return the correct entity architecture pair to
+which the component is bound to.
+Module:	parser.
+
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL exit
+
+
+Reference to test case that has this problem:	
+/home/mal/bugs.vhdl/config_spec.vhdl
+
+Detailed description of the problem or reference to it:
+	
+Bug fixed by: Dale
+
+Date fixed: 4/16/97
+
+Files Modified for fixing the bug:
+vhdl.gg
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: 3/22/97
+Submitted by: Ramanan
+Priority:  MEDIUM
+Short Description of the Problem: incorrect representation of bit vectors
+Module : Parser/Code generator
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc1078.vhd
+
+Detailed description of the problem or reference to it:
+when the following statements are parsed and code is generated for them : 
+
+SUBTYPE    bit_vector_8 is bit_vector ( 0 to 7 );
+VARIABLE  v_slice : bit_vector_8 := B"1010_1100";
+
+the value of v_slice gets printed as B"1010_1100". Either the parser
+should weed out the "B" and the "_" or these should be done by the code
+generator people.
+
+Bug fixed by: SK
+
+Date fixed: 16 May 97
+
+Files Modified for fixing the bug: IIRScram_BitStringLiteral.cc
+
+--------------------------------------------------------------------------
+-------------------------------------------------------------------------
+Date:	May 19 97
+Submitted by: SK
+Priority: HIGH
+
+Short Description of the Problem: Resolution of Signal attributes
+Module:	PARSER
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: 
+
+Reference to test case that has this problem: sharc_a31/benchmarks/t14/t14.vhdl
+
+Detailed description of the problem or reference to it:
+IIR_Attribute::_get_implicit_declaration() returns NULL for ALL signal
+attributes.  Other examples that fail include t11, t13, t15, t16, t17, t18.
+
+Bug fixed by: Dale 
+
+Date fixed: May 19 97
+
+Files Modified for fixing the bug:
+IIR_Attribute.cc
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date:	May 19 97
+Submitted by: SK
+Priority: Medium
+
+Short Description of the Problem: IIR_NextStatement::get_enclosing_loop()
+returns NULL
+Module:	PARSER
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: IMPROPER RESULTS.
+
+Reference to test case that has this problem: billowitch/no_err/tc1554.vhd
+
+Detailed description of the problem or reference to it:
+IIR_NextStatement::get_enclosing_loop() should return the innermost
+enclosing loop, the loop to which this next statement refers by default.
+This is returning NULL.
+
+Bug fixed by: Dale
+
+Date fixed: 5 19 97
+
+Files Modified for fixing the bug:
+vhdl.gg
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date:	May 19 97
+Submitted by: Malolan C
+Priority: Medium
+
+Short Description of the Problem: some Dyadic operators are seen as
+function calls
+
+Module:	PARSER
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Build fails
+
+Reference to test case that has this problem: billowitch/no_err/tc2259.vhd
+
+Detailed description of the problem or reference to it:
+	mod operator is seen as IIR_FunctionCall, it should be seen as
+IIR_Modulus operator.
+	
+The other operators that have such problems are, "abs",
+"**"(exponentiation), "rem".
+
+Bug fixed by: Dale
+
+Date fixed: 5/20/97
+
+Files Modified for fixing the bug:
+all of the IIR_BlahOperator files in question, and standard.vhdl.
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 2/28/97
+Submitted by: SK
+Priority:  HIGH
+Short Description of the Problem: Incorrect resolution of IIR_ReturnStatement::get_return_expression()
+Module : Parser / Semantic Checker
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: ABORTS
+
+Reference to test case that has this problem: savant_tests/sharc_a31/benchmarks/t10/t10.vhdl
+
+Detailed description of the problem or reference to it:
+aborts at the following line in the vhdl file:
+	line 27: return result;
+index gets resolved to IIR_SimpleName.
+Aborts in IIRScram_ReturnStatement::_publish_cc() at the following line:
+	line 70: ASSERT(get_return_expression()->_is_resolved());
+
+Bug fixed by: Dale
+
+Date fixed: ? don't know
+
+Files Modified for fixing the bug:
+? don't know - can't reproduce
+--------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: May 27
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Improper resolution of selected names
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t43/t43.vhdl
+
+Detailed description of the problem or reference to it: 
+Fails assertion with the following message:
+
+IIRScram_SelectedName.cc:50: failed assertion `_is_resolved() == true'
+
+Bug fixed by: 
+Dale
+
+Date fixed: 
+5/27/97
+
+Files Modified for fixing the bug: 
+IIR_UseClause.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: May 27
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Improper resolution of procedure call
+statements without parantheses
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t30/t30.vhdl
+
+Detailed description of the problem or reference to it: 
+IIRScram_ProcedureCallStatement::get_procedure_name() returns an
+IIR_SimpleName instead of IIR_ProcedureDeclaration.
+
+Bug fixed by: 
+Dale
+
+Date fixed: 
+5/27/97
+
+Files Modified for fixing the bug: 
+IIRScram_ProcedureCallStatement.cc
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: May 27
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Multidimensional array types not
+resolved properly.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t3/t3.vhdl t6.vhdl t10.vhdl t26.vhdl t28.vhdl
+
+Detailed description of the problem or reference to it: 
+The second index of a multidimensional array type is not resolved
+properly.  Though _get_num_indexes() retunrs 2,
+get_element_subtype()->_get_index_subtype() returns NULL.
+
+Bug fixed by: Dale(front-end)
+	Malolan C(Code - generator problem that appeared after the
+front-end problem was fixed)
+
+Date fixed: 31 may 97
+
+Files Modified for fixing the bug: 
+	IIRScram_ArrayTypeDefinition.cc
+	IIRScram_ArrayTypeDefinition.hh
+------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: 2/28/97 
+Submitted by: Dale
+Priority:  HIGH
+Short Description of the Problem:
+Module : Parser / Semantic Checker
+--------------------------------------------------------------------------
+
+Fixed by Dale - sometime around May 23.
+
+Formal of associationbyexpression not getting resolved correctly in all
+cases.  billowitch/no_err/tc2399.vhd - break on
+IIR_AssociationElementByExpression::_rval_to_decl...
+
+Test cases t11, t12, t13, t14, t15, t16, t17 and t18 in the sharc model
+benchmark suite also fail due to this bug.
+
+Also, fix uncomment line 62 of IIRScram_AssociationElementByExpression
+when the oppurtunity arises.
+
+billowitch/no_err/tc279.vhd - resolution of "k" line 22 is incorrect...
+--------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Jun  1
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: get_subtype() of IIR_Expression Aborting
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: t6.vhdl of sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+	When get_subtype() of IIR_Expression is called within
+IIR_Aggregate, the code-generator aborts.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	6/1/97
+
+Files Modified for fixing the bug: 
+	IIR_OthersInitialization.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun  1
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Range attribute in For loop statement is
+not getting resolved properly
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort
+
+Reference to test case that has this problem: t37.vhdl in sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+Fails assertion in
+IIRScram_ForLoopStatement::_publish_cc_for_loop_stmt_with_range() with the
+following message:
+
+scram: aire/iir/IIRScram/IIRScram_ForLoopStatement.cc:147: void IIRScram_ForLoopStatement::_publish_cc_for_loop_stmt_with_range(): Assertion `range_attr->_is_resolved()' failed.
+Abort
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	7/2/97
+
+Files Modified for fixing the bug: 
+	IIR_Aggregate.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun  1
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Range attribute in For loop statement is
+not getting resolved properly
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort
+
+Reference to test case that has this problem: t37.vhdl in sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+Fails assertion in
+IIRScram_ForLoopStatement::_publish_cc_for_loop_stmt_with_range() with the
+following message:
+
+scram: aire/iir/IIRScram/IIRScram_ForLoopStatement.cc:147: void IIRScram_ForLoopStatement::_publish_cc_for_loop_stmt_with_range(): Assertion `range_attr->_is_resolved()' failed.
+Abort
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	7/1/97
+
+Files Modified for fixing the bug: 
+	vhdl.gg
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun  2
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Slice names getting resolved as indexed
+names.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal Exit
+
+Reference to test case that has this problem: t50.vhdl in sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+This is not really a bug, but it is the way the node is resolved.  Right
+now, 
+
+	sig(1 to 3)
+
+where sig is a signal gets resolved as an IIR_IndexedName with prefix as a
+signal declaration and suffix as an integer subtype definition.  To avoid
+special case checking it is better if this is resolved as an IIR_SliceName
+with the prefix as a signal declaration and the suffix as the range
+(which, in general can be an expression).
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	7/2/97
+
+Files Modified for fixing the bug: 
+	IIR_IndexedName.cc, IIR_SliceName.hh, IIR_SliceName.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun  2
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: get_subtype() of IIR_Expression Aborting
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: t6.vhdl of sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+	When get_subtype() of IIR_Expression is called within
+IIR_OthersInitialization, the code-generator aborts.
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	6/2/97
+Files Modified for fixing the bug: 
+	IIR_OthersInitialization
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun  2
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Slice names getting resolved as indexed
+names.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal Exit
+
+Reference to test case that has this problem: t50.vhdl in sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+This is not really a bug, but it is the way the node is resolved.  Right
+now, 
+
+	sig(1 to 3)
+
+where sig is a signal gets resolved as an IIR_IndexedName with prefix as a
+signal declaration and suffix as an integer subtype definition.  To avoid
+special case checking it is better if this is resolved as an IIR_SliceName
+with the prefix as a signal declaration and the suffix as the range
+(which, in general can be an expression).
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	6/2/97
+Files Modified for fixing the bug: 
+	IIR_IndexedName.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: May 29
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: parser can't disambiguate between entity
+				  port signal name and component port
+				  signal name 
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORTS
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t48/t48.vhdl
+
+Detailed description of the problem or reference to it: 
+the following error is reported by scram :
+
+t48.vhdl:1176: Can't disambiguate symbol |inp| from the following choices:
+|inp|, declared in file |t48.vhdl|, line 894.
+|inp|, declared in file |t48.vhdl|, line 1007.
+|inp|, declared in file |t48.vhdl|, line 412.
+|inp|, declared in file |t48.vhdl|, line 1072.
+|inp|, declared in file |t48.vhdl|, line 597.
+|inp|, declared in file |t48.vhdl|, line 965.
+|inp|, declared in file |t48.vhdl|, line 301.
+|inp|, declared in file |t48.vhdl|, line 1043.
+|inp|, declared in file |t48.vhdl|, line 513.
+|inp|, declared in file |t48.vhdl|, line 1100.
+|inp|, declared in file |t48.vhdl|, line 682.
+|inp|, declared in file |t48.vhdl|, line 1108.
+|inp|, declared in file |t48.vhdl|, line 723.
+t48.vhdl:1176: Error in overload resolution in IIR_IndexedName::_rval_to_decl
+Abort
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	6/3/97
+
+Files Modified for fixing the bug: 
+	IIRScram_ConfigurationSpecification.cc vhdl.gg resolution_func.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun  7
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: savantConcatenate is not defined for
+SavantstringType
+Module: Code Generator
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Make fails
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t8/t8.vhdl
+
+Detailed description of the problem or reference to it: 
+savantConcatenate(SavantstringType, SavantstringType) is not defined. It
+is only defined for char *, char *.
+
+Bug fixed by:  Malolan C
+
+Date fixed: 10 Jun 97
+
+Files Modified for fixing the bug: 
+ArrayType.cc, ArrayType.hh, Vector.hh, Vector.cc, VHDLType.hh, VHDLType.cc,
+ScalarType.hh, ScalarType.cc, SavantstringType.hh SavantstringType.cc
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Jun 11
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: all types attributes need to be fixed
+Module: Parser and the Code Generator
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Parse fails
+
+Reference to test case that has this problem: 
+In sharc model suite : t21, t22, t23, t24, t25
+In billowitch suite  : tc3178, tc3179, tc3180, tc3181, tc3182, tc3183
+
+Detailed description of the problem or reference to it: 
+currently the parse fials to parse the above set of test cases.
+aborts on the assertions like 
+failed assertion `_is_resolved() == true'
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		6/16/97
+	
+Files Modified for fixing the bug: 
+		IIRScram_ValAttribute.(hh,cc)
+
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 3/21/97
+Submitted by: Ramanan
+Priority:  MEDIUM
+Short Description of the Problem: Incorrect resolution of range in case 
+statement. 
+Module : Parser
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/sharc_models/benchmarks/t42/t42.vhdl
+
+Detailed description of the problem or reference to it:
+when a case statement of the following type is encountered :
+case func is
+      when 1 to 10 =>
+Instead of the range being read, only the first part of the range is read
+and the rest is ignored. So the statement becomes "when 1 => "
+
+Bug fixed by: Ramanan
+
+Date fixed: 06/17/96
+
+Files Modified for fixing the bug:
+	IIRScram_CaseStatementAlternativeByChoices.cc 
+	IIRScram_CaseStatementAlternativeByExpression.cc 
+	IIRScram_Choice.cc IIRScram_ChoiceList.cc 
+
+--------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: May 27
+Submitted by: Krishnan Subramani
+Priority: Low
+Short Description of the problem: Val attribute not resolved properly
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t21/t21.vhdl - t25.vhdl
+
+Detailed description of the problem or reference to it: 
+
+Bug fixed by: Dale E. Martin
+
+Date fixed: 06/16/97
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 12
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: scram resolves record field of another
+record type as an ElementDeclaration instead of SelectedName
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: incorrect publishing
+
+Reference to test case that has this problem: billowitch/no_err/tc1009.vhd
+
+Detailed description of the problem or reference to it: 
+Consider two record types t1 and t2. If t2 had a field of type t1, then
+scram doesn't recursively parse it as a SelectedName. Instead it resolves
+it as a ElementDeclaration.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	6/17/97
+
+Files Modified for fixing the bug: 
+	IIRScram_SelectedName, IIRScram, IIRScram_SimpleName
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Jun  9
+Submitted by: Radharamanan Radhakrishnan
+Priority: MEDIUM
+Short Description of the problem: expression is getting resolved as an
+indexed name when it is actually a type conversion
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: incorrect publishing - Make failed
+
+Reference to test case that has this problem: billowitch/no_err/tc3166.vhd
+
+Detailed description of the problem or reference to it: 
+Consider the following piece of vhdl code :
+
+	constant L : REAL := -10.0;
+        constant R : REAL := 10.0;
+
+        type RT1 is range L to R;
+       
+        RT1'left = RT1(L) <---------- **** problem on rhs of expression
+
+RT1(L) is actually a type conversion expression, but currently
+it is getting resolved as an indexed name.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	6/18/97
+
+Files Modified for fixing the bug: 
+	IIRScram_IndexedName, IIRScram_TypeConversion
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 12
+Submitted by: Krishnan Subramani
+Priority: Medium
+Short Description of the problem: Improper resolution of
+AttributeSpecification::get_value().
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: t53.vhdl in sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+AttributeSpecification::get_value() returns a IIR_SimpleName instead of an
+expression.
+I have temporarily fixed it, though it is not entirely correct.
+I have modified IIRScram_AttributeSpecification::_type_check() (towards
+the end).  The modifications follow the following comment:
+  // The following code is added by SK
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	6/18/97
+
+Files Modified for fixing the bug: 
+	IIR_AttributeSpecification
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: May 27
+Submitted by: Krishnan Subramani
+Priority: Medium
+Short Description of the problem: Unidentifiable internal error in parser.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t9/t9.vhdl
+
+Detailed description of the problem or reference to it: 
+scram (without -publish-cc) spits out the following error message 10 times
+
+Internal error resolving || in IIRScram_AssociationList::_resolve_and_order
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	6/18/97
+Files Modified for fixing the bug: 
+(couldn't reproduce the bug)
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: June 20
+Submitted by: Ardhendu Singh
+Priority: Medium
+Short Description of the problem: publishing-error.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal
+
+Reference to test case that has this problem:
+/home/ramanan/research/savant_tests/billowitch/no_err/tc1.vhd
+
+Detailed description of the problem or reference to it: 
+For the below line:
+   type t1 is  range 0.012345 to 300.012345;
+the published code in vhdl is:
+  type t1 is  real range 0.012345 to 300.012345;
+
+It seems that this being a type definition is interpreted as
+subtype definition. As a result, publish-vhdl of subtype is
+called which output the above code.
+This gives syntax error when parser is run on the published code.
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 20
+Submitted by: Radharamanan Radhakrishnan
+Priority: Medium
+Short Description of the problem: asserts in functions are not handled
+currently
+Module: Code generator
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Core dumps
+
+Reference to test case that has this problem: billowitch/no_err/tc17.vhd
+
+Detailed description of the problem or reference to it: 
+Assert statements defined outside the process are currently not
+handled.
+
+Bug fixed by: SK
+
+Date fixed: Jun 23
+
+Files Modified for fixing the bug: 
+	Was already fixed.
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: May 27 1997
+Submitted by: SK
+Priority: LOW 
+
+Short Description of the Problem: Component declarations in packages not supported.
+
+Module:	Code generator
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORTS
+
+Reference to test case that has this problem: sharc_a31/benchmarks/t37/t37.vhdl
+
+Detailed description of the problem or reference to it:
+	Component declarations in packages not supported.
+
+Bug fixed by: SK
+
+Date fixed: Jun 23 1997
+
+Files Modified for fixing the bug:
+	IIRScram_DeclarationList.cc IIRScram_PackageDeclaration.cc
+--------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 23
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: get_value() within an IIRScram_Allocator
+                                  node always returns NULL
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: incorrect result
+
+Reference to test case that has this problem: billowitch/no_err/tc531.vhd
+
+Detailed description of the problem or reference to it: 
+
+In the following variable declaration, v_bool_ptr1 doesn't get initialized
+as get_value() always returns NULL.
+
+	variable v_bool_ptr1: bool_ptr := new boolean'(true);
+
+scram -publish-vhdl produces the above variable declaration as follows:
+	variable v_bool_ptr1 : bool_ptr := new boolean;
+The initialization was ignored.
+
+Bug fixed by: Dale
+
+Date fixed: 7/25/97
+
+Files Modified for fixing the bug: 
+	vhdl.gg
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Jun 23
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: subtype indication in object alias
+declaration not set properly
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: SIMULATION ABORTS
+
+Reference to test case that has this problem: tc2090.vhd, tc2091.vhd
+
+Detailed description of the problem or reference to it: 
+
+If there is VHDL descrioption as following:
+	TYPE     boolean_v is array (integer range <>) of boolean;
+	SUBTYPE     boolean_4 is boolean_v (1 to 4);
+	variable l_operand : boolean_4 := (true,false,true,false);
+	alias    l_alias   : boolean_v (1 to 2) is l_operand (2 to 3);	
+
+the subtype indications index constraint has (1 to 4) instead of (1 to 2).
+
+Bug fixed by: Dale
+
+Date fixed: 6/25/97
+
+Files Modified for fixing the bug: 
+  IIR_AliasDeclaration
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: May 21 1997
+Submitted by: Malolan C
+Priority:  HIGH
+Short Description of the Problem: A function call is seen as a function
+declaration
+
+(Priority bumped up by Ramanan)
+
+Module : Parser
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem: 
+billowitch/no_err/tc2486.vhd
+billowitch/no_err/tc1523.vhd
+
+Detailed description of the problem or reference to it:
+	A function call that doesn't have any parameters at all is seen as
+a function declaration.
+
+Bug fixed by: Dale
+
+Date fixed: 6/25/97
+
+Files Modified for fixing the bug: 
+	IIRScram_SimpleName.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jul  2
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: _is_element() is not set properly
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Make Failure during build
+
+Reference to test case that has this problem: t10.vhdl of sharc
+
+Detailed description of the problem or reference to it: 
+	When an unconstrained single dimension array type is declared,
+whose element type is a single dimensional array, the declared array type
+is seen as a two  dimensional array type. The _is_element() is returning
+false at the element type of the array, where it has to return true.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	7/2/97	
+
+Files Modified for fixing the bug: 
+	vhdl.gg
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: July 1 1997
+Submitted by: Umesh Kumar Rajasekaran
+Priority: MEDIUM
+Short Description of the Problem: mantissa, exponent in IntegerLiteral is
+not set properly
+Module: PARSER
+-----------------------------------------------------------------------
+Type of exit when exhibiting bug: publish-vhdl publishing incorrect vhdl
+code.
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc2702.vhd
+
+Detailed description of the problem or reference to it:
+	For a IntegerLiteral  16#F#e1
+
+	the parser sets like this 
+	mantissa = "#F#"
+	
+	sometimes 
+	mantissa = "#F#e1" and
+	exponent = ""
+
+Bug fixed by : P. A. Wilsey
+
+Date fixed : 7/4/97
+ 
+Files Modified for fixing the bug:
+        vhdl.gg
+----------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Jul  1
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Selected names in use clause not
+resolved properly.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: t33.vhdl in sharc
+benchmarking suite
+
+Detailed description of the problem or reference to it: 
+A selected name of the form foo.bar.all in the use clause, it gets
+resolved as a shown below:
+
+			*		where '*' is a selected name node.
+		     *    all
+ 	 Simple Name    Simple Name
+
+Surprisingly this error does not occur for all use clauses, only in
+"selected" ones.
+
+Bug fixed by: 
+	Dale 
+
+Date fixed: 
+	7/8/07
+
+Files Modified for fixing the bug: 
+	too many to list.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jul  8
+Submitted by: Dhananjai Madhava Rao
+Priority:  HIGH
+Short Description of the problem: Function call being resolved as a simple name
+Module: Analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: t29.vhdl in sharck benchmarks
+
+Detailed description of the problem or reference to it: 
+
+A function call with no parameters is being seen as a simple name rather than
+as a function call. Hence an assert while publishing  failes.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	7/8/97
+
+Files Modified for fixing the bug: 
+	IIR_ConcurrentProcedureCallStmt, vhdl.gg
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jul  9
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Attribute names in index constraint not
+resolved.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Assert Failure
+
+Reference to test case that has this problem: t5 and t46 of sharc benchmarks.
+
+Detailed description of the problem or reference to it: 
+Consider a declaration of the following type,
+
+	variable foo: bit_vector(bar'range);
+
+The subtype of foo points to an ArrayTypeDefinition.  The index subtype of
+the ArrayTypeDefinition, which is a ScalarTypeDefinition has left, right,
+and direction as NULL.  Code-generation fails assertion here.  This occurs
+about 12 times in the Sharc model (t46), and as "early" as line 1604.
+
+Bug fixed by: 
+	Dale
+
+	This BUG was not really resolved - the parser builds the type
+	with the attribute attatched to it as it does for for loops.  
+	This is essentially a hack that we need to use until we hear
+	about a "real" fix from John Willis.
+
+Date fixed: 
+	7/18/97	
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: July 9 1997
+Submitted by: Umesh Kumar Rajasekaran
+Priority: HIGH
+Short Description of the problem: use clauses are not set properly
+Module: PARSER
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: Normal Exit
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc54.vhd
+
+Detailed description of the problem or reference to it: 
+
+if you have this vhdl code
+	use work.foo.all
+where foo is a package name.
+
+	Then IIR_Name * in UseClause class points to a IIR_SelectedName
+and prefix in IIR_SelectedName points to the IIR_PackageDeclaration foo and
+suffix points to IIR_DesignatorByAll . The "work" is not there in the use
+clause. 
+
+Bug fixed by:
+	Dale
+
+Date fixed by:
+	7/97
+
+Files modified for fixing the bug:
+
+________________________________________________________________________
+------------------------------------------------------------------------
+Date: Jun  7
+Submitted by: Krishnan Subramani
+Priority: HIGH (Previously low)
+Short Description of the problem: Nested for loop statements.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal Exit
+
+Reference to test case that has this problem: t6.vhdl in sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+When there are nested for loop statements as this:
+	loop1: for i in foo'range(1) loop
+	  loop2:for j in foo'range(2) loop
+	          ....
+the suffix for the range attribute in 'loop1' and 'loop2' are seen as '1',
+which in general is the suffix of the outermost loop.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	7/97
+
+Files Modified for fixing the bug: 
+	Was a publishing problem.  Don't rememeber the fix.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 22
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH ( previously reported as Medium)
+Short Description of the problem: range attribute's prefix is incorrectly
+set
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: incorrect publishing
+
+Reference to test case that has this problem:
+billowitch/no_err/tc2950.vhd, tc2951
+
+Detailed description of the problem or reference to it: 
+Consider the following piece of code :
+	
+	for i in in1'RANGE loop  <--- first range
+            result(result'left + i - in1'left) := in1(i);
+        end loop;
+        for i in in2'RANGE loop <--- second range
+            result(result'left + in1'length + i - in2'left) := in2(i);
+        end loop;
+
+when publishing code for the above piece of code, the prefix of the first
+range attribute is lost. Only the prefix of the second range (namely in2)
+is seen.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	7/21/97
+Files Modified for fixing the bug: 
+	vhdl.gg
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jul 21
+Submitted by: Krishnan Subramani
+Priority: VERY HIGH
+Short Description of the problem: subtype of Dyadic operators not set.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem: t1.vhdl in sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+Fails assertion in IIRScram_DyadicOperator::_is_short_circuit(), because
+get_subtype() returns NULL.
+
+	I have made this a "VERY HIGH" bug because code-generation for the
+sharc model can not proceed because of this.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	July 22, 1997
+
+Files Modified for fixing the bug: 
+	IIRScram_Statement, and all nodes with boolean expressions in
+        them.
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Jun 25
+Submitted by: Dale
+Priority: Low
+Short Description of the problem: VHDL publishing doesn't work for
+this case
+Module: VHDL Back end
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: falied assertion
+
+Reference to test case that has this problem: ~dmartin/enumeration_index.vhdl
+
+Detailed description of the problem or reference to it:
+  Run this test case with -publish-vhdl and it aborts.  I believe the
+intermediate is being built properly.
+
+Bug fixed by: 
+	Umesh Kumar Rajasekaran
+Date fixed: 
+	was fixed when something else was fixed
+Files Modified for fixing the bug: 
+	Don't remember the files
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jul 31
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: Aggregate that is a Subtype of
+unconstrained array type is still seen unconstrained
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Compilation Error in the generated code
+
+Reference to test case that has this problem: t46.vhdl, line# 24761
+
+Detailed description of the problem or reference to it: 
+	For example:
+	signal BR_N:  STD_LOGIC_VECTOR(6 downto 1);
+	BR_N <= (others => 'H');
+	the Aggregate Containing the Others initialization's subtype has
+to same as that of the lhs, as the aggregate is also constrained. But
+currently the Aggregates subtype returns the unconstrained type
+STD_LOGIC_VECTOR. 
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	8/1/97
+
+Files Modified for fixing the bug: 
+	IIRScram_SignalAssignmentStatement.cc
+------------------------------------------------------------------------
+
+-----------------------------------------------------------------------
+Date: Jul 16, 1997
+Submitted by: Tim McBrayer
+Priority: HIGH
+Short Description of the problem: Missing ConfigurationSpecification
+port_map_aspect
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal exit
+
+Reference to test case that has this problem:
+ptsc.vhdl
+
+Detailed description of the problem or reference to it: 
+After parsing, the IIR_ConfiguratonSpecification node corresponding to:
+
+for L1: Read_in use entity Work.Read_in(Read_in_arch);
+
+has a port_map_aspect of length 0.  This node should have the implicit
+port_map_aspect implied by the original statement.  I believe at one time,
+it did contain this information, but it is no longer getting set.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	8/1/97
+
+Files Modified for fixing the bug: 
+	IIRScram_ConfigurationSpecification.cc
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: May 27
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: std_logic_vector undefined
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t5/t5.vhdl t7.vhdl
+
+Detailed description of the problem or reference to it: 
+scram (without -publish-cc) exits with the following message:
+
+t7.vhdl:15: |std_logic_vector| is undefined in this scope.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	8/1/97
+
+Files Modified for fixing the bug: 
+	I believe this was a configuration problem.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: July 8 1997
+Submitted by: Umesh Kumar Rajasekaran
+Priority: MEDIUM
+Short Description of the problem: scram doing segmentation fault
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: segmentation fault
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc895.vhd
+
+Detailed description of the problem or reference to it:
+
+Bug fixed by:
+
+Date fixed:
+
+Files Modified for fixing the bug:
+	Not reproducible.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 30
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: get_subtype() not set for an enumeration
+literal
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Code-genaration aborts
+
+Reference to test case that has this problem: tc217.vhd
+
+Detailed description of the problem or reference to it: 
+	If the suffix in 'Pos attribute is an enumeration literal, the
+get_subtype() of the IIR_EnumerationLiteral is not set, and it is NULL.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	don't know.  not reproducible any more.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 25
+Submitted by: Radharamanan Radhakrishnan
+Priority: Medium
+Short Description of the problem: failed assertion
+`current_formal->_is_name() == true' in IIRScram_AssociationList
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORTS
+
+Reference to test case that has this problem: billowitch/no_err/tc157.vhd
+
+Detailed description of the problem or reference to it: 
+scram (without -publish-cc) aborts in the function _resolve_and_order in
+IIRScram_AssociationList.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	not reproducible any more
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jul 31
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: element declarations type definition not
+seen in case statements
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Compilation error in the generated code
+
+Reference to test case that has this problem: t46.vhdl line # 22024
+
+Detailed description of the problem or reference to it: 
+  For the following VHDL code:	
+
+  type LSTACK is
+    record
+      LAST_ADDR    : BIT_24;
+      TERM_COND    : BIT_5;
+      BIT_RESV     : BIT;
+      Loop_type    : Bit_3;
+      Loop_counter : bit_32;
+    end record;
+
+  type LOOPSTACK  is array(NATURAL range <>) of  LSTACK;  
+
+	variable    lOOP_STACK  : LOOPSTACK(6 downto 1);	
+	case LOOP_STACK(1).loop_type is
+        when "101"  =>  
+	The case statement's expression type should be Bit_3, but it is
+seen as LSTACK.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	8/3/97
+	
+Files Modified for fixing the bug: 
+	IIRScram_SelectedName.??
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Aug  1
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: width's get_declarative_region is
+pointing to a function declaration instead of a package declaration
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: incorrect publishing
+
+Reference to test case that has this problem: t46.vhdl (#1715)
+
+Detailed description of the problem or reference to it: 
+As width's declarative_region is pointing to a function declaration, width
+gets mangled when published. If it was pointing to the correct package
+declaration, namely the textio package, then the name wouldn't have been
+mangled. 
+
+The same thing happens for "text" also.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	8/6/97
+
+Files Modified for fixing the bug: 
+	symbol_table, vhdl.gg	
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Jul 31
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: unfilled generics needs to be filled
+(requirement than a bug)
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Compilation error in the generated code
+
+Reference to test case that has this problem: t46.vhdl, line #24358
+
+Detailed description of the problem or reference to it: 
+	When a generic clause in a component declaration has five interface
+declarations and in generic map only three are given new values, the
+remaining two assumes the values specifies in the generic clause. The
+requirement is that the  generic map has to have all the interface declarations
+specified in the generic clause of component declaration with the
+unspecified ones having the default inital values specified in the generic
+clause.
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	8/4/97
+
+Files Modified for fixing the bug: 
+	IIRScram_AssociationList
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: June 30 1997
+Submitted by: Umesh Kumar Rajasekaran
+Priority: HIGH
+Short Description of the Problem: function call with named association
+list is not getting parsed due to a assert failing
+Module: PARSER
+-------------------------------------------------------------------------
+Type of exit when exhibiting bug: IOT Trap and exit
+
+Reference to test case that has this problem:
+~urajasek/tc1033.vhd
+
+Detailed description of the problem or reference to it:
+	Function call with named association list is not getting
+parsed. It is exiting due to a assert failing.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	8/6/97
+
+Files Modified for fixing the bug: 
+	vhdl.gg
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: July 7 1997
+Submitted by: Umesh Kumar Rajasekaran
+Priority: HIGH
+Short Description of the Problem: index subtypes not being handled
+properly.
+Module: PARSER
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: Normal. Except Publish-Vhdl publishing
+different code if you re-publish the published vhdl code
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc366.vhd
+
+Detailed description of the problem or reference to it:
+	type tribit is array(natural range <> ) of mvl ;
+	subtype word is tribit ( 0 to 16 );
+
+	if you have this code. index subtype of word is pointing to a
+integersubtype definition with its base type pointing to Integer type
+definition. So when publivh-vhdl is called it publishes as
+	type tribit is array(natural range <> ) of mvl;
+	subtype word is tribit ( integer range 0 to 16 );
+	Now if you again parse this code, the index subtype of word is
+pointing to a integer subtype definition and its base type is pointing to
+natural range <> which in turn is pointing to natural and so on. So when
+you publish-vhdl , it is publishing code as this
+	type tribit is array(natural range <> ) of mvl;
+	subtype word is tribit( natural range 0 to 16 );
+
+	So there is a difference between two successive publish-vhdl coed.
+
+	The same thing happens if the index subtype of the tribit is
+positive etc.
+
+Bug fixed by:
+
+Date fixed:
+
+Files Modified for fixing the bug:
+	bug could not be reproduced.
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 23
+Submitted by: Krishnan Subramani
+Priority: Medium
+Short Description of the problem: Indexed name with selected name prefix
+not resolved properly
+Module: Semantic checker
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal exit
+
+Reference to test case that has this problem: tc1029.vhd in billowitch
+
+Detailed description of the problem or reference to it: 
+A name "x.y(z)" gets resolved as an indexed name with the prefix as an
+element declaration, whereas it should get resolved as an indexed name
+with a selected name as it's prefix.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+	could not be reproduced
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 08
+Submitted by: Ardhendu  Singh
+Priority: HIGH
+Short Description of the problem: Parsing Error while analyzing
+configuration specification statement.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem:
+billowitch/no_err/tc1653.vhd
+Detailed description of the problem or reference to it:
+Parser is unable to parse configuration specification statement when
+they are published with port map or generic map. It also truncate the
+hierarchical name of entity i.e. 'work.ent1' is published as 'ent1'.
+
+Bug fixed by:
+	Dale
+
+Date fixed:
+	8/10/97
+
+Files Modified for fixing the bug:
+	IIRScram_ConfigurationSpecification.cc
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Aug 11
+Submitted by: Dhananjai Madhava Rao
+Priority: HIGH
+Short Description of the problem: Analyzer is not setting up an IIR node
+properly and the problem is seen ONLY when NAME MANGLING is in place.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal exit but wrong code is generated
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t46/t46.vhdl 
+
+Detailed description of the problem or reference to it:
+
+-------- from t46.vhdl ------------
+.
+.
+.
+package body MEMORY_FUNCTIONS is
+.
+.
+.
+procedure LOAD_MEM ( INTERNAL_MEM_B0  : inout MEM_ARRAY;
+                       INTERNAL_MEM_B1  : inout MEM_ARRAY;
+                       NO_ITEMS         : in INTEGER;
+                       FILE_NAT         : in NATURAL;
+                       SIZE             : in INTEGER;
+                       FILE_IN          : in MEM_FILENAME ) is
+    file INPUT_FILE       : TEXT open read_mode is FILE_IN;
+.
+.
+.
+
+
+DESCRIPTION :
+
+   When publishing code for the file declaration [file INPUT_FILE, in
+IIRScram_FileDeclaration::_publish_cc_decl() ],
+get_file_logical_name()->get_kind() returns an IIR_SIMPLE_NAME. But
+expecting an IIR_INTERFACE_DECLARATION there. Since there is a work around
+in simple names, that logical file name is not getting mangled properly
+and results in a compilation error.
+
+Bug fixed by:
+	Dale
+
+Date fixed:
+	8/13/97
+
+Files Modified for fixing the bug:
+	vhdl.gg
+------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+
+Date: 12 Aug 1997
+Submitted by: Tim McBrayer
+Priority: HIGH
+Short Description of the problem: _get_declarative_region not always being set
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Assertion failure
+
+Reference to test case that has this problem:
+ptsc.vhdl
+
+Detailed description of the problem or reference to it:
+
+IIRScram_Declaration::_declarative_region is apparently not always being
+set when it needs to be.  When publishing VHDL for this testcase, the
+first configuration specification publishes properly (for L1), but the
+second, for L2, has _get_declarative_region() return NULL, failing the
+assertion in
+IIRScram_ArchitectureDeclaration::_publish_vhdl_with_library_name(). 
+
+Bug fixed by:
+	Dale
+Date fixed:
+	8/15/97
+
+Files Modified for fixing the bug:
+	vhdl.gg
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date: 7/18/97
+Submitted by: Tim McBrayer
+Priority: HIGH
+
+Short Description of the Problem: port association of configuration 
+	specification is incorrect
+
+Module:	parser
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem:	ptsc.vhdl
+
+Detailed description of the problem or reference to it:
+The port_map_aspect of a IIR_ConfigurationSpecification has the same node
+for both its formal and actual parameters, for each association in the
+list.  The formal is correct, but the actual, instead of containing the
+local for the component port instance, also contains the formal.
+
+Bug fixed by: Tim McBrayer
+
+Date fixed: 8/20/97
+
+Files Modified for fixing the bug: IIRScram_ConfigurationSpecification.[cc|hh]
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Aug 26
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: FAILS ASSERT in _rval_to_decl() in
+IIRScram_Aggregate.cc
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORTS
+
+Reference to test case that has this problem: tc2382.vhd, tc2380.vhd
+
+Detailed description of the problem or reference to it: 
+	when scram the file tc2382.vhd, it gives the message:
+
+	scram: aire/iir/IIRScram/IIRScram_Aggregate.cc:308: class IIR *
+IIRScram_Aggregate::_rval_to_decl(class IIR_TypeDefinition *): Assertion
+`_is_resolved() == true' failed.
+
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	8/27/97
+
+Files Modified for fixing the bug: 
+	a bunch - mainly vhdl.gg
+------------------------------------------------------------------------
+
+
+
+------------------------------------------------------------------------
+Date: Aug 25
+Submitted by: Dhananjai Madhava Rao
+Priority: V.HIGH
+Short Description of the problem: get_subtype() in IIRScram_Aggregate, 
+return NULL and fails assertions.
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORTS During Parsing
+
+Reference to test case that has this problem: tc1031.vhd
+
+Detailed description of the problem or reference to it: 
+	The get_subtype() on IIRScram_Aggregate returns NULL and fails
+assertion. (This fails in 426 cases).
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	8/25/97
+
+Files Modified for fixing the bug: 
+	a bunch
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 24
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: get_subtype() of IIR_PhysicalLiteral,
+which is derived from IIR_Expression returns NULL
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORTS During Code-Generation
+
+Reference to test case that has this problem: tc1010.vhd
+
+Detailed description of the problem or reference to it: 
+	The get_subtype() on IIR_Expression returns NULL. The actual
+object is IIR_PhysicalLiteral, which is derived from IIR_Expression. 
+
+For the followinjg construct:
+	 SUBTYPE cst_scl6 IS TIME       RANGE  0 fs   TO     10 ns;
+
+0 fs is IIR_PhysicalLiteral and its subtype is TIME. But get_subtype()
+returns NULL.
+
+Bug fixed by: 
+	Dale
+
+Date fixed: 
+	8/24/97
+
+Files Modified for fixing the bug: 
+	vhdl.gg
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 27
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: the parameter list of the "write"
+procedure call is not getting built up right.
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: incorrect publishing
+
+Reference to test case that has this problem: tc3204.vhd, tc3205.vhd
+
+Detailed description of the problem or reference to it: 
+In the above two cases, the order of parameters in a call to the same type
+of write are different. This causes a type unification error while
+compiling. This is marked as a high priority big because it concerns an
+essential part of every test case in the billowitch suite.
+
+Bug fixed by: 
+	Dale
+Date fixed: 
+	Around 9/1/97
+
+Files Modified for fixing the bug: 
+	IIR_AssociationList.cc	
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov  5
+Submitted by: Malolan Chetlur
+Priority: HIGH(Bumped up the priority from medium to High on dec 3)
+Short Description of the problem: Parser fails assertion
+Module: Parser/Sematic Analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORT
+
+Reference to test case that has this problem: tc2860.vhd
+
+Detailed description of the problem or reference to it: 
+scram prints the following message before aborting :
+
+Processing file tc2860.vhd
+scram: aire/iir/IIRScram/IIRScram_TextLiteral.cc:258: class set<IIR_TypeDefinition> * IIRScram_TextLiteral::_get_rval_set_for_string(): Assertion `start < my_length' failed.
+Abort (core dumped)
+
+Bug fixed by:
+
+This  problem does not appear now : Swaminathan Subramanian 
+
+Date fixed: 
+Dec 22 1997
+
+Files Modified for fixing the bug:
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 26 (moved up to high priority - Nov 11)
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: call to get_designated_type() in
+AccessTypeDefinition returns NULL
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: core dumps
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/fsm/fsm_pkg.vhdl
+
+Detailed description of the problem or reference to it: 
+The following assertion is violated :
+aire/iir/IIRScram/IIRScram_AccessTypeDefinition.cc:410: failed assertion
+`get_designated_type() != ((void*)0)' Abort (core dumped)
+
+
+Bug fixed by: 
+
+This problem does not appear now:Swaminathan Subramanian
+
+Date fixed: 
+Dec 22 1997
+
+Files Modified for fixing the bug:
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov  7
+Submitted by: Krishnan Subramani, Dale Martin, Ramanan
+Priority: HIGH
+Short Description of the problem: parsed entity and architecture are not
+in scope.
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Seg Fault
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/cmu_benchmarks/diffeq/diffeq_test.vhdl
+
+Detailed description of the problem or reference to it: 
+While scram'ming this file with -no-library-manager scram detects a
+homograph error in a library.
+
+Bug fixed by:
+
+This problem does not appear now : Swaminathan Subramanian 
+
+Date fixed: 
+Dec 22 1997
+
+Files Modified for fixing the bug:
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: May 27
+Submitted by: Krishnan Subramani
+Priority: HIGH
+Short Description of the problem: Assertion failiure in
+ScalarTypeDefinition
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Aborts
+
+Reference to test case that has this problem:
+sharc_a31/benchmarks/t4/t4.vhdl
+
+Detailed description of the problem or reference to it: 
+scram (without -publish-cc) fails assertion with the following message:
+
+aire/iir/IIRScram/IIRScram_ScalarTypeDefinition.cc:1872: failed assertion `range->get_left() != ((void*)0)'
+Abort
+
+Bug fixed by: 
+
+Parse complete-no errors
+This problem  does not appear now:Swaminathan Subramanian
+
+Date fixed: 
+Dec 22 1997
+
+Files Modified for fixing the bug:
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov  3
+Submitted by: Malolan Chetlur
+Priority: HIGH (Made high on 2-dec)
+Short Description of the problem: parser fails assertion with others
+initialization
+Module: Parser/Sematic analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort
+
+Reference to test case that has this problem: tc2471.vhd
+
+Processing file tc2471.vhd
+tc2471.vhd:12: |'7'| is not valid in this context.
+scram: aire/iir/IIRScram/IIRScram_EnumerationLiteral.cc:244: class IIR * IIRScram_EnumerationLiteral::_rval_to_decl(class IIR_TypeDefinition *): Assertion `retval != ((void *)0)' failed.
+Abort (core dumped)
+
+Bug fixed by:
+  Problem does not appear now. 
+  Passes Simulation : Swaminathan Subramanian
+Date fixed: 
+  Jan 6 '98
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov 19
+Submitted by: DJ
+Priority: HIGH
+Short Description of the problem: implicit base types of array types WITH
+INTEGER RANGES are not unconstrained.
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: normal (but bad VHDL)
+
+Reference to test case that has this problem:
+
+billowitch/no_err/tc1028, billowitch/no_err/tc113.vhd
+
+(Refer to ~dmadhava/savant_test/error_cases" for a comprehensive list of
+270 other cases)
+
+Detailed description of the problem or reference to it: 
+
+The base type of array types is set to the range of the array
+itself. The base type must be unconstrained.
+
+Bug fixed by: 
+Problem does not appear now
+Passes simulation:Swaminathan
+
+Date fixed: 
+Jan 7 '98
+Files Modified for fixing the bug:
+ 
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jan  9
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: assertion failure when trying to access
+a design file
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+savant_tests/DP32/processo.vhd
+savant_tests/disk/allFiles.vhdl
+
+Detailed description of the problem or reference to it: 
+aire/iir/IIRScram/IIRScram.cc:1325: failed assertion
+`source->_get_design_file() != ((void*)0)' 
+make: *** [processo.vhd] Abort (core dumped)
+
+Bug fixed by: 
+
+Parse complete - No errors.  :Swami
+
+Date fixed: 
+Jan 13 1998
+
+Files Modified for fixing the bug: 
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 18
+Submitted by: Radharamanan Radhakrishnan
+Priority: HIGH
+Short Description of the problem: declarative region of an architecture
+should be IIR_LIBRARY_DECLARATION, but somehow it is being set to
+IIR_ARCHITECTURE_DECLARATION
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: aborts
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/libMgr_tests/tc3_2.vhd-->PARSE COMPLETE
+(Note: first parse tc3_1.vhd before parsing tc3_2.vhd)-->PARSE COMPLETE
+savant_tests/big_flat_stru/form10.vhd -->PARSE COMPLETE
+
+Detailed description of the problem or reference to it: 
+The following assert fails while parsing tc3_2.vhd:
+ASSERT(_get_declarative_region()->get_kind() == IIR_LIBRARY_DECLARATION);
+
+The error message is:
+aire/iir/IIRScram/IIRScram_ArchitectureDeclaration.cc:107: 
+failed assertion `_get_declarative_region()->get_kind() == 
+						IIR_LIBRARY_DECLARATION'
+Abort (core dumped)
+
+This is because, when the library manager brings in boo(bar) and adds to
+the symbol table, the declarative region of foo is set to the architecture
+(blackbox in the error case) in which the configuration specification
+statement is
+              - DJ.
+
+Bug fixed by: 
+Parse complete - No errors:Swami
+Date fixed: 
+Jan 13 1998
+
+Files Modified for fixing the bug:
+Bug Reappearss now
+------------------
+Date: Oct  6- Date (18/jan/97)
+Submitted by: Malolan Chetlur
+Priority: HIGH
+Short Description of the problem: The labels appearing in the Designator
+list of IIR_ComponentConfiguration are not resolved
+	The labels appearing in the configuration declaration are
+different from the ones appearing in the concurrent statement of the architecture.
+Module: PARSER
+------------------------------------------------------------------------
+Type of exit when exhibiting bug: Aborts during Code-generation
+
+Reference to test case that has this problem: tc877.vhd, tc837.vhd
+tc842.vhd, tc843.vhd, tc844.vhd
+Detailed description of the problem or reference to it: 
+If there is a configuration declaration of the following form:
+
+ARCHITECTURE A1 OF E1 IS
+BEGIN
+...
+    AA_BLK : block
+        component FOUR
+        end component;
+    begin
+        LH : FOUR;
+        LR : FOUR;
+    end block;
+END;
+
+configuration C1 of E1 is
+    for A1
+        for AA_BLK
+            for LH, LR : FOUR
+                use entity work.E2(A2);
+            end for;
+        end for;
+    end for;
+end C1;
+	The Label, AA_BLK is different from the AA_BLK appearing in the 
+concurrent statement.
+
+	The labels LH and LR appearing here are different from the
+ones, that are appearing within the Block statement AA_BLK.
+
+Bug Fixed by:
+Code generation finishes successfully - Swami
+Passes simulation also in tc877.vhd,tc837.vhd,tc843.vhd - Seq Kernel
+---------------------------------------------------------------------------
+###########################################################################
+##################### MEDIUM PRIORITY BUGS ################################
+###########################################################################
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov  7
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: get_component_name() of configuration
+specification within block's declarative part is not resolved
+Module: Parser/Semantic analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort during code generation
+
+Reference to test case that has this problem: tc876.vhd
+
+Detailed description of the problem or reference to it: 
+	The configuration specification og the form :
+
+for all : LOCAL
+ use entity work.c01s03b02x00p02n01i00876ent_a (c01s03b02x00p02n01i00876arch_a)
+ port map (ia => CI, ib => I2, oc => CO, od => RES);
+
+	the get_component_name() is seen as an IIR_SimpleName.
+
+
+Bug fixed by: 
+
+Code generation finished successfully:Swaminathan Subramanian
+
+Date fixed: 
+Dec 22 1997
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov  5
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: PARSER fails assertion
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort
+
+Reference to test case that has this problem: tc277.vhd, tc279.vhd , tc308.vhd
+
+Detailed description of the problem or reference to it: 
+Before aborting, scram prints the following message :
+
+Processing file tc277.vhd
+tc277.vhd:10: Internal error in IIRScram_SimpleName::_rval_to_decl - zero possibilities found for |r2|.
+Abort (core dumped)
+
+Bug fixed by: 
+
+Parse  complete - no errors 
+This problem does not appear now:Swaminathan Subramanian
+
+Date fixed: 
+Dec 22 1997
+
+Files Modified for fixing the bug:
+
+------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------
+Date: Nov  5
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: Parser fails assertion in  Qualified 
+expression
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: ABORT
+
+Reference to test case that has this problem: tc276.vhd
+
+Detailed description of the problem or reference to it: 
+Before Aborting, scram prints the following messgae :
+Processing file tc276.vhd
+scram : aire/iir/IIRScram/IIRScram_QualifiedExpression.cc:127: class IIR * IIRScram_QualifiedExpression::_rval_to_decl(class IIR_TypeDefinition *): Assertion `my_rval == get_type_mark()' failed.
+Abort (core dumped)
+
+Bug fixed by: 
+
+Parse complete-no errors
+This problem  does not appear now: Swaminathan  Subramanian
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov  3
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: fails assertion during parsing
+Module: Parser/Semantic Analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort
+
+Reference to test case that has this problem: tc2515.vhd
+
+Detailed description of the problem or reference to it: 
+Scram prints the following 
+Processing file tc2515.vhd
+tc2515.vhd:24: The expression in a type conversion must be resolvable without context:
+tc2515.vhd:24: Cannot determine unique type for |f(hundreds)|.  Choices include:
+Type |century|, with type <1 to 10>.
+Type |millenia|, with type <('1', '2', '3', '4', '5')>, declared in file |tc2515.vhd|, line 15.
+tc2515.vhd:24: Umm, don't know what this |century(f(hundreds))| is refering to. (Doesn't seem to be a function call, slice, type conversion, or array access).
+', '4', '5')>, declared in file |tc2515.vhd|, line 15.
+scram: aire/iir/IIRScram/IIRScram_IndexedName.cc:1129: class IIR * IIRScram_IndexedName::_semantic_transform(class set<IIR_TypeDefinition> *): Assertion `retval->_is_resolved() == true' failed.
+Abort (core dumped)
+
+Bug fixed by: 
+
+Parse complete - no errors
+This problem  does not appear now:Swaminathan Subramanian
+
+Date fixed: 
+Dec 22 1997
+
+Files Modified for fixing the bug:
+
+------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------
+Date: Nov  3
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: Parser fails assertion, while
+disambiguating Enumeration literals
+Module: Parser/Semantic analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort
+
+Reference to test case that has this problem: tc2408.vhd
+
+Detailed description of the problem or reference to it: 
+Scram prints out the following message :
+Processing file tc2408.vhd
+tc2408.vhd:15: |'1'| is not valid in this context.
+scram : aire/iir/IIRScram/IIRScram_EnumerationLiteral.cc:244: class IIR * IIRScram_EnumerationLiteral::_rval_to_decl(class IIR_TypeDefinition *): Assertion `retval != ((void *)0)' failed.
+
+Bug fixed by: 
+
+Parse complete - no errors
+This Problem does not appear now.
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+-----------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Aug 25
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: Error differentiating overloaded
+subprogram by name of formals
+Module: PARSER
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL_EXIT, SIMULATION FAILS
+
+Reference to test case that has this problem: tc2964.vhd of billowitch
+
+Detailed description of the problem or reference to it: 
+Having two function declarations of the form:
+	(A) function f6f(constant c0 : in real;constant c1 : in integer)
+	(B) function f6f(constant c2 : in integer;constant c3 : in real)
+and two function calls	
+	(1) f6f(c1 => 4, c0 => 4.4)
+	(2) f6f(c3 => 4.4, c2 => 4)
+	call (1) gets mapped onto function declaration (B) instead of (A)
+	call (2) gets mapped onto function declaration (A) instead of (B)
+Code-generator assumes the parameters in the function call are in the same
+order as that of in the function declaration.
+
+Bug fixed by: 
+Passes simulation:Swaminathan
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Aug 13
+Submitted by: Ardhendu Singh
+Priority: HIGH
+Short Description of the problem: Duplicate function declaration node 
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal but incorrect vhdl code is published
+
+Reference to test case that has this problem:
+billowitch/no_err/tc817.vhd
+
+Detailed description of the problem or reference to it: 
+When parsing published vhdl code that has both function declaration and
+function body, two distinct iir function declaration nodes are seen for
+the same function. This causes re-publishing of vhdl code to fail.
+
+Bug fixed by: 
+Passes simulation:Swaminathan 
+Date fixed: 
+Jan 8 1998
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun 30
+Submitted by: Radharamanan Radhakrishnan
+Priority: MEDIUM
+Short Description of the problem: _get_subtype() from within a
+				  StringLiteral returns NULL
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Incorrect publishing
+
+Reference to test case that has this problem: billowitch/no_err/tc2745.vhd
+
+Detailed description of the problem or reference to it: 
+As the subtype is not seen, we cannot instantiate objects of type
+SavantStringType.
+
+Bug fixed by: 
+Problem does not appear now, passes simulation: Swami
+Date fixed: 
+Jan 8 1998
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Jun  2
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: formal in association list of aggregates
+Module: Parser, code-generator
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Simulation Aborts
+
+Reference to test case that has this problem: t3.vhdl of sharc
+
+Detailed description of the problem or reference to it: 
+	when aggregates are called with possitional association, instead
+of named associations, the get_formal() of the associations returns value
+ranging from 0 to number of values instead of the values in the range of
+the index subtype.
+	This code will have correct get_formal() ranging from 1 to 2
+	    constant origin : point := (1=>0.0, 2=>1.0, 3=>2.0);	
+	whereas the following code will have get_formal() from 0 to 2
+	    constant origin : point := (0.0, 1.0, 2.0);	
+
+	Actually this is not a bug, An agreement between the parser and
+the code generator has to be arrived at to handle this scenario.
+
+Bug fixed by: 
+Simulation completes successfully:Swami
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun  9
+Submitted by: Krishnan Subramani
+Priority: Medium
+Short Description of the problem: Incorrect resolution of suffix of pos
+attribute
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal
+
+Reference to test case that has this problem: t8.vhdl of sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+The suffix of a pos attribute of a type returns an
+IntegerSubtypeDefinition.  It should return an integer literal in this
+particular case.
+
+Bug fixed by: 
+Simulation Completes :Swami
+Date fixed: 
+Jan  8 1998
+
+Files Modified for fixing the bug: 
+
+--------------------------------------------------------------------------
+Date:	May 19 97
+Submitted by: SK
+Priority: Medium
+
+Short Description of the Problem: For Loop iterator not resolved properly.
+Module:	PARSER
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: IMPROPER RESULTS.
+
+Reference to test case that has this problem: billowitch/no_err/tc1536.vhd
+
+Detailed description of the problem or reference to it:
+If there is a declaration of an identifier "i", which is also used as a
+loop iterator, the reference to the identifier "i" is resolved as the
+declaration and not the implicitly declared constant loop iterator.
+Example : "i" in the above mentioned example.
+
+Bug fixed by:
+Passes simulation
+Date fixed:
+
+Files Modified for fixing the bug:
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Nov  5
+Submitted by: Malolan Chetlur
+Priority: MEDIUM
+Short Description of the problem: Parser fails assertion in
+IIRScram_Operator node
+Module: PArser/Semantic Analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Abort
+
+Reference to test case that has this problem: tc3062.vhd, tc3099.vhd,
+tc3202.vhd, tc940.vhd
+
+Detailed description of the problem or reference to it: 
+scram prints the following message :
+
+Processing file tc3062.vhd
+ |sa| and |ai| aren't compatible, and therefore make an invalid qualified expression.
+ |sa| is undefined in this scope.
+scram : aire/iir/IIRScram/IIRScram_Operator.cc:120: class IIR * IIRScram_Operator::_rval_to_decl(class IIR_TypeDefinition *): Assertion `_is_resolved() == true' failed.
+Abort (core dumped)
+
+Bug fixed by: 
+Parse Complete - No errors : Swami
+Date fixed: 
+Jan 13 1998
+
+Files Modified for fixing the bug: 
+
+
+-------------------------------------------------------------------------
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+Date: Aug 26
+Submitted by: Radharamanan Radhakrishnan
+Priority: MEDIUM
+Short Description of the problem: scram blows up on a declaration of a
+composite type which is of type (constrained) character array type
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Error reported by scram
+
+Reference to test case that has this problem: no_err/tc32.vhd
+
+Detailed description of the problem or reference to it: 
+Synopsis parses this case without any problems. Scram has probles parsing
+the following statements :
+
+TYPE    U1 IS ARRAY (CHARACTER RANGE <>) OF INTEGER;
+TYPE UU1 IS ARRAY (INTEGER RANGE   <>  ) OF U1         ('a'     TO 'd');
+
+The error reported by scram is as follows :
+
+The type of a range used in this manner must be determinable without context.
+Cannot determine unique type for |'a' to 'd'|.  Choices include:
+Type |character|, with type <(nul, soh, stx, etx, eot, enq, ack, bel, bs,
+ht, lf, vt, ff, cr, so, si, dle, dc1, dc2, dc3, dc4, nak, syn, etb, can,
+em, sub, esc, fsp, gsp, rsp, usp, ' ', '!', '"', '#', '$', '%', '&', ''',
+'(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6',
+'7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E',
+'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\', ']', '^', '_', '`', 'a', 'b', 'c',
+'d', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+'s', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~', del)>.
+Type |<ANONYMOUS>|, with type <character range <> >, declared in file 
+|tc32.vhd|, line 9.
+
+
+Bug fixed by: 
+Code gen finishes successfully: Swami
+Date fixed: 
+Jan 30 1998
+Files Modified for fixing the bug:
+--------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date:	May 21 97
+Submitted by: Ramanan
+Priority: Medium
+
+Short Description of the Problem: variables with the same name as the type
+				  are not handled correctly
+
+Module:	PARSER
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Build fails
+
+Reference to test case that has this problem: billowitch/no_err/tc43.vhd
+
+Detailed description of the problem or reference to it: In tc43.vhd, the
+statement " constant integer : integer := 1; " results in the variable
+"integer"'s disapperance from the state. The moment I replace the above
+statement with the following statement : "constant i : integer := 1; ",
+the problem ceases to exist. Hence, i guess the parser is not registering
+"integer" as a variable and hence it never gets published in the state.
+
+
+Bug fixed by:
+Passes simulation-Seq Kernel - Swami
+Date fixed:
+
+Files Modified for fixing the bug:
+--------------------------------------------------------------------------
+
+
+###########################################################################
+##################### LOW PRIORITY BUGS ###################################
+###########################################################################
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Nov 12
+Submitted by: Malolan Chetlur
+Priority: LOW
+Short Description of the problem: Sig and Sig'STABLE have differring
+declaratve regions
+Module: PARSER/Semantic Analyzer
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Build fails
+
+Reference to test case that has this problem: tc3085.vhd
+
+Detailed description of the problem or reference to it: 
+In file tc3085.vhd of billowitch, signal s1 and implicit signal declartion
+for attribute s1'STABLE have different declarative regions. Code-generator
+assumes both have the same declarative region.
+
+Bug fixed by: 
+Passes test:Swami
+Date fixed: 
+Jan 8th 1998
+Files Modified for fixing the bug: 
+--------------------------------------------------------------------------
+Date: 10/07/97
+Submitted by: Umesh
+Priority: LOW
+
+Short Description of the Problem: parser setting the prefix of a 'low
+attribute wrongly.
+
+Module: parser
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: NORMAL EXIT
+
+Reference to test case that has this problem:
+~ramanan/research/savant_tests/billowitch/no_err/tc1157.vhd
+
+Detailed description of the problem or reference to it:
+In the above file for v.re2'low(1) the prefix of low attribute points to
+the declaration of re2 instead of v.re2
+
+Bug fixed by:
+Passes simulation:Swami
+Date fixed:
+
+Files modified for fixing the bug:
+
+
+--------------------------------------------------------------------------
+------------------------------------------------------------------------
+Date: Jun  9
+Submitted by: Krishnan Subramani
+Priority: Low
+Short Description of the problem: natural'left returns INT_MIN
+Module: Parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Normal
+
+Reference to test case that has this problem: t8.vhdl of sharc benchmarks
+
+Detailed description of the problem or reference to it: 
+natural'left should return 0, but it returns INT_MIN.
+
+Bug fixed by: 
+
+Date fixed: 
+
+Files Modified for fixing the bug: 
+
+------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: May 21 1997
+Submitted by: SK
+Priority:  Low
+Short Description of the Problem: An array subtype definition with index
+				  constraint is resolved as an array type 
+				  definition.
+Module : Parser.
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: IMPROPER RESULT
+
+Reference to test case that has this problem: billowitch/no_err/tc1165.vhd
+
+Detailed description of the problem or reference to it:
+A declaration of the following kind,
+            type A1 is array (1 to 2) of BOOLEAN;
+should make A an array subtype definition with the index constrained
+filled in.  This does not happen.  A gets built as an array type definition.
+
+Bug fixed by: 
+Passes simulation:Swami
+Date fixed: 
+Jan 8 1998
+Files Modified for fixing the bug: 
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+Date:	17/April/97
+Submitted by: SK
+Priority: ( LOW )
+
+Short Description of the Problem:
+IIRScram_ConcurrentProcedureCallStatement::actual_parameter_part has zero
+elements always.
+Module:	PARSER
+--------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: INCORRECT RESULT
+
+Reference to test case that has this problem: savant_tests/billowitch/no_err/tc1728.vhd
+
+Detailed description of the problem or reference to it:
+IIRScram_ConcurrentProcedureCallStatement::actual_parameter_part has zero
+elements, so _transmute is not able to build the sensitivity list.
+
+Bug fixed by:
+Passes simulation:Swami
+Date fixed:
+Jan 8 1998
+Files Modified for fixing the bug:
+------------------------------------------------------------------------
+
+--------------------------------------------------------------------------
+Date: 2/24/97
+Submitted by: SK
+Priority:  LOW
+Short Description of the Problem: Incorrect resolution of subtype for
+				  IIR_SubtypeDeclaration.
+Module : Parser
+--------------------------------------------------------------------------
+Type of exit when exhibiting bug: 
+ABORTS
+
+Reference to test case that has this problem: savant_tests/billowitch/no_error/tc2012.vhd
+
+Also file tc14.vhd, tc16.vhd of billowitch
+
+Detailed description of the problem or reference to it:
+I get the following in gdb:
+  (gdb) p get_declarator()->get_text()
+  $17 = 0x85d22e0 "mytype"
+  (gdb) p get_subtype()->_get_declaration()->get_declarator()->get_text()
+  $18 = 0x85d37d8 "myresolvedtype"
+Invoked from IIRScram_SubtypeDeclaration.cc:_publish_cc_decl()
+I am not exactly sure where the problem is, and hence such a description.
+
+Bug fixed by:
+Parse complete - no errors Swami
+Date fixed:
+Jan 13 1998
+Files Modified for fixing the bug:
+------------------------------------------------------------------------
+Date: Mar 20
+Submitted by: Narayanan Thondugulam
+Priority: HIGH
+Short Description of the problem: A function declaration node is returned
+where a function call node should be returned
+Module: parser
+------------------------------------------------------------------------
+
+Type of exit when exhibiting bug: Make failure
+
+Reference to test case that has this problem: tc2989.vhd
+
+Detailed description of the problem or reference to it: 
+In the file tc2989.vhd on line 31 there is a function call using a
+selected name (this function is declared in a package). Instead of
+returning a function call for this node a function declaration node is
+returned by the parser.
+
+Bug fixed by: 
+		Dale
+Date fixed: 
+		3/30/98
+
+Files Modified for fixing the bug: 
+		IIRScram_SimpleName.cc
+------------------------------------------------------------------------

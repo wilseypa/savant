@@ -1,0 +1,105 @@
+Specification ID:  5.2.2-Default-Binding-Indications
+
+Date of Requirement Submission: Sun Sep 28 1997
+
+Related Specifications:
+	To be added (regarding incremental bindings)
+
+VHDL-Construct(s):	configuration_declaration
+			configuration_specification
+			entity_aspect
+			generic_map_aspect
+			port_map_aspect
+
+User Module(s):	Code-generator (-publish-cc)
+
+Developer Module(s): Semantic Analyzer
+
+IIR Node(s): IIR_ConfigurationDeclaration
+	     IIR_BlockConfiguration
+	     IIR_ComponentConfiguration
+	     IIR_AssociationList
+
+Purpose:     To implement different ways of port-map and generic map
+bindings in the runtime-elaborator.
+
+Detailed Specification:
+	The components that are instantiated by a component instantiation
+statement can be bound to real entity by a configuration specification or
+in a configuration declaration. The Port maps and Generic maps speficied
+during these binding indications needs to be reflected in the
+IIR_AssociationLists, port_map_aspect and generic_map_aspect of
+configuration specification/declaration.
+
+Here we consider only the binding indications appearing in Configuration
+Declarations. 
+
+Requirements for DEFAULT BINDING RULE:
+--------------------------------------
+For the following VHDL-code:
+
+ENTITY E1 IS
+    generic ( g1 : boolean );
+    port    ( p1 : in  Bit;
+              p2 : out Bit );
+END E1;
+
+ARCHITECTURE A1 OF E1 IS
+BEGIN
+...
+END A1;
+
+
+ENTITY E2 IS
+END E2;
+
+ARCHITECTURE A2 OF E2 IS
+   signal       s1   : Bit := '0';
+   signal       s2   : Bit := '1';
+   component virtual
+      generic ( g1 : boolean );
+      port    ( p1 : in  Bit;
+           p2 : out Bit );
+   end component;
+BEGIN
+
+   u1 : virtual generic map ( true ) port map (s1, s2);
+
+   TESTING: PROCESS
+   BEGIN
+...
+   END PROCESS TESTING;
+
+END A2;
+
+configuration C of E2  is
+   for A2
+      for u1 : virtual use entity work.E1(A1);
+	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      end for;
+   end for;
+end C;
+
+	The default Binding rules apply here as they satisfy the default
+binding rules specified in the LRM(section 5.2.2). 
+
+	Therefore Configuration Declaration should bne seen as:
+
+configuration C of E2  is
+   for A2
+      for u1 : virtual use entity work.E1(A1)
+	generic map(g1=> g1)
+	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^Added lines
+	port map(p1 => p1, p2 => p2);
+	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^Added lines
+      end for;
+   end for;
+end C;
+	
+Status:	Not Yet Satisfied
+
+Date of Requirement Satisfaction:
+
+Modified Files:
+
+Developer's Comments:

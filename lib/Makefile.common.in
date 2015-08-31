@@ -1,0 +1,77 @@
+#-*-makefile-*-
+# Copyright (c) 1993-1995 The University of Cincinnati.
+# All rights reserved.
+
+# UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+# THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+# TO THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE, OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE
+# FOR ANY DAMAGES SUFFERED BY LICENSEE AS A RESULT OF USING,
+# MODIFYING OR DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+# By using or copying this Software, Licensee agrees to abide by the
+# intellectual property laws, and all other applicable laws of the
+# U.S., and the terms of this license.
+
+
+# You may modify, distribute, and use the software contained in this package
+# under the terms of the "GNU LIBRARY GENERAL PUBLIC LICENSE" version 2,
+# June 1991. A copy of this license agreement can be found in the file
+# "LGPL", distributed with this archive.
+
+# Authors: Philip A. Wilsey	phil.wilsey@uc.edu
+#          Dale E. Martin	martin@ece.uc.edu
+
+# Relevant subdirs
+
+CXX = @CXX@
+
+# Flags for various stages of C compiler
+LIBS = @LIBS@
+LDFLAGS = @LDFLAGS@
+DEBUG = -g -Wall
+OPTIMIZE = -pipe
+COMMON_CPPFLAGS = @CPPFLAGS@
+COMMON_CXXFLAGS = @CXXFLAGS@ $(DEBUG) $(OPTIMIZE)
+
+ANTLR = @ANTLR@
+
+LEX = @LEX@
+# flex supports these flags for optimizing performance; simply remove
+# '-Cfe' if your lex equivalent complains....
+LEXOPTIMIZE = -Cfe
+LEXFLAGS = -+ -i $(LEXOPTIMIZE)
+RANLIB = @RANLIB@
+PURIFY = @PURIFY@
+QUANTIFY = @QUANTIFY@
+
+# Flags for antlr
+AFLAGS = -gx -k 2 -CC -ft VHDLTokenTypes.hh 
+
+#### Here are some macros....
+COMPILE_cc = $(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+LIBTOOL_COMPILE_cc = libtool --tag=CXX --mode=compile $(COMPILE_cc)
+
+LINK_exe = libtool --tag=CXX --mode=link \
+	$(CXX) $(CXXFLAGS) -static -rdynamic $^\
+	$(LIBVHDL) $(LIBTW) $(LIBCOMMON) $(LDFLAGS)\
+	-o $@ $(LIBS)
+
+LINK_lib = libtool --tag=CXX --mode=link \
+	$(CXX) $(CXXFLAGS) -module -rpath $(PWD) $^\
+	$(LIBVHDL) $(LIBTW) $(LIBCOMMON) $(LDFLAGS)\
+	-o $@ $(LIBS)
+
+#### Here are some default rules.
+%.o: %.cc
+	$(COMPILE_cc)
+
+%.lo: %.cc
+	$(LIBTOOL_COMPILE_cc)
+
+LIBTW = -lwarped
+LIBVHDL = -lVHDL
+
+SIMCXXFLAGS = $(COMMON_CXXFLAGS)
+SIMCPPFLAGS = $(COMMON_CPPFLAGS) -DDEVELOPER_ASSERTIONS

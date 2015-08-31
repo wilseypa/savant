@@ -1,0 +1,39 @@
+
+This directory contains the primary documents that describe the
+overall structure and organization of SAVANT.  Each separate document is
+registered in a separate subdirectory.  The documentation is written in
+latex source and compatibility with the latex2html converter has been
+maintained so that it can be viewed through an html browser. The html
+versions of all three documents are available off the SAVANT homepage
+(http://www.ececs.uc.edu/~paw/savant). 
+
+There are currently three documents contained herein.  Their names and the
+driver file therein are:
+
+programmers/programmers.tex:
+    This document was originally a set of slides for a training
+    seminar for people interested in extending SAVANT.  It provides an 
+    overview of the basic structure and programming interface of the 
+    SCRAM c++ classes. These classes are organized in a manner to support 
+    the notions of an extensible IF.  Programming exercises are included 
+    to help aquaint the reader with SAVANT.
+
+libraryManager/libraryManager.tex:
+    Some quick documentation on the VHDL library manager that accompanies
+    SAVANT.  At present, SAVANT uses VHDL as its file format.
+
+simulationManual/simulationManual.tex:
+    This is a set of guidelines for performing VHDL (sequential and
+    parallel) simulation. 
+
+------------------------------------------------------------------------
+
+SAVANT version 1.0
+The University of Cincinnati
+savant@ececs.uc.edu
+http://www.ececs.uc.edu/~paw/savant
+
+------------------------------------------------------------------------
+
+Last Revised: March 15, 1999
+

@@ -1,0 +1,22 @@
+Things that need to be done, either by us or someone else (contact us if you'd
+like to help!), in no particular order.
+
+Expand the coverage of the language in the code generator.
+
+Recognize, report, and recover from more types of errors.
+
+Build a wave viewer.  (Work under way - send mail to savant-devel@ececs.uc.edu
+to get involved.)
+
+Support interactive debugging.
+
+Support VITAL and SDF.
+
+Implement the VHDL PLI.
+
+Support VHDL-AMS.
+
+Start building a library of VHDL models with known status for Savant - 
+status being if they analyze correctly, simulate correctly, etc.
+
+Support sanity warnings (aka -Wall) to help stricten up code.

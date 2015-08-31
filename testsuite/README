@@ -1,0 +1,201 @@
+
+This directory contains the scripts and a very small default testsuite
+for savant.  The Makefile.am herein is setup to automatically access the
+VESTs testsuite if tests from that system are desired.  This is
+described more fully below below.  The system is also setup to support
+testing with compliant and non-compliant VHDL.
+
+SAVANT uses the dejagnu test harness for building the testsuite.  For
+details on writing and adding tests, please see the file
+README_TEST_AUTHORS in this directory.  This README only describes the
+running of tests.
+
+
+
+1. WHAT IS TESTED
+=================
+
+This testsuite is easily configured to exercise various features the
+SAVANT system and its affiliated simulation subsystems (TyVIS/WARPED).
+In particular, the system supports the following different TESTLEVELS
+(except for publish-vhdl, each higher testlevel encompasses the previous
+levels):
+
+    parse (default): exercise the scram analyzer and report if it
+      correctly parses compliant tests and fails with non-compliant
+      tests.  A pass is recorded if the analyzer terminates with no
+      errors; otherwise a fail is recorded.
+
+    publish-cc: exercise the scram analyzer and then attempt to generate
+      c++ code.  Record the test as a pass if the code generator
+      terminates gracefully with only warning messages; otherwise a fail
+      is recorded.
+
+    build: exercise the scram analyzer, generate c++ code, and attempt
+      to compile the generated c++.  Record the test as a pass if the
+      build does not produce an error message; otherwise a fail is
+      recorded.
+
+    simulate: exercise the scram analyzer, generate c++ code, attempt to
+      compile the generated c++, and run the simulation.  Record a pass
+      if the simulation terminates correctly; otherwise a fail is
+      recorded.
+
+    publish-vhdl: exercise the scram analyzer and then test the
+      correctness of the publish-vhdl methods to correctly output VHDL
+      from the intermediate form.  This is a heuristic test method that
+      (1) processes the original file producing VHDL with the
+      publish-vhdl methods, (2) reprocessing the generated VHDL and
+      publishing VHDL a second time, and (3) comparing the VHDL produced
+      from the first and second processing steps.  If the analysis steps
+      succeed and there is no difference in the output from the two
+      passes, the test is passed; otherwise the test is recorded as a
+      fail.
+
+The TESTLEVEL is an variable that can be set in the environment or given
+on the command line (e.g., make check TESTLEVEL=simulate).
+
+
+
+2. INVOCATIONS
+==============
+
+Burn cinnamon incense, sit lotus style facing north-by-northwest, relax,
+and repeat after me: testing....oh testing.
+
+
+**** THIS APPEARS TO BE FIXED IN DEBIAN UNSTABLE:  I'm leaving this
+     comment, if you get a really strange error and the "set host_alias"
+     line contains nothing other than those two words, try deleting it and
+     see what happens
+
+****DO THIS FIRST****
+
+After configuring the SAVANT system, edit the Makefile in this directory
+and delete the line that contains
+
+    set host_alias.....
+
+If you fail to do this site.exp will contain a line that looks like "set
+host_alias" and runtest will terminate unexpectedly and without
+explanation when it attempts to source site.exp.  For some reason the
+autotools/dejagnu designers are outputing this line even when no
+defintion for the "host_alias" exists.  I have been unable to discover a
+clean way around this....
+
+****END DO THIS FIRST****
+
+
+The simplest invocation of the testsuite occurs with the command
+
+    make check
+
+which can also be issued at the root level of the SAVANT source tree.
+This command will cause all the tests contained in savant/testsute that
+are named savant.* to be executed.  Hence if you bring in the VESTs
+testsuite (see below), this command will also exercise those tests.  The
+Makefile also has several interesting targets that you can use.  For
+example the following will exercise all tests at the correspondingly
+named TESTLEVEL:
+
+    make check-publish-vhdl
+    make check-publish-cc
+    make check-build
+    make check-simulate
+
+You can also install the VESTs testsuite under the subdirectory named
+savant.vests with the command:
+
+    make savant.vests
+
+WARNING: the VESTs testsuite is large and comes in from an anonymously
+         accessed CVS archive.  It will also expanding the time to run a
+         test by a substantial margin.  Simply testing the analyzer
+         takes approximately 15 minutes on a 700MHz Pentium III.
+
+WARNING: Once the vests testsuite is in place, it will be included in
+         any test invocations you make.  You can remove it by simply
+         deleting savant.vests or renaming it with something other than
+         the "savant." prefix.
+
+Finally, the following makefile targets will exercise various parts of
+the VESTs testsuite (and will cause it to be fetched if it is not
+already present).
+
+    make check-vests 
+        run only the tests in the VESTs archive.
+	 
+    make check-ashenden
+        run only the tests in the Ashenden subdirectories of the VESTs
+        archive.
+
+    make check-billowitch
+        run only the tests in the Billowitch subdirectories of the VESTs
+        archive.
+
+    make check-compliant
+        run only tests in the VESTs that are compliant to the VHDL language
+        standard.
+
+    make check-non-compliant
+        run only tests in the VESTs that are not compliant to the VHDL
+        language standard.
+
+
+
+3. RESULTS
+==========
+
+The results of a test run are recorded in three places:
+
+1. A summary result is written on the tty where the testrun is invoked.
+2. A summary result is written to the file savant.sum.
+3. Detailed results including output from SAVANT is recorded in the file
+   savant.log. 
+
+The scripts maintain counts of passes/fails and reports summaries at the
+end of a testrun.  The start and stop times of the test run is reported
+as is the version information from scram.  This summary data is
+organized into two parts:
+
+1. The left hand part of the summary data records raw results
+   independent of the compliance or non-compliance of the input models.
+   Thus, for example, if the analyzer processes a non-compliant VHDL
+   model without error, the test will be recorded under the "Passed"
+   column.
+
+2. The right hand side of the summary records actual results
+   corresponding to the compliance or non-compliance of the input model
+   to the language standard.  Thus, for example, if scram fails to
+   process a non-compliant VHDL model, the test will be recorded under
+   the "Pass" column.
+
+
+
+4. SUMMARY NOTES
+================
+
+1. The dejagnu program runtest drives the test system.  Subdirectories
+   config and lib contain TCL scripts that support the SAVANT testing
+   subsystem.
+
+2. You have to manually edit either the Makefile or site.exp to remove
+   the empty "set host_alias" line (or runtest will fail without
+   explaination).
+
+3. All subdirectories of savant/testsuite with the prefix "savant." will
+   be examined for tests to run (once you install the VESTs testsuite it
+   will be used in all testing).
+
+4. TESTLEVEL controls the type of testing done.  You can set TESTLEVEL
+   as an environment variable or on the commandline.
+
+5. You can use one of the Makefile targets (which are much easier
+   identified in Makefile.am) to invoke your the testsuite.
+
+
+------------------------------------------------------------------------
+Clifton Labs, Inc                                 savant@cliftonlabs.com
+http://www.cliftonlabs.com:/savant
+------------------------------------------------------------------------
+Last Revised: November 4, 2001

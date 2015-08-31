@@ -1,0 +1,5 @@
+#!/bin/sh
+find -name "*.cc" -print | xargs grep -l "==="
+find -name "*.hh" -print | xargs grep -l "==="
+find -name "*.gg" -print | xargs grep -l "==="
+find -name "Makefile*" -print | xargs grep -l "==="

@@ -1,0 +1,75 @@
+
+
+
+Nothing to it:
+
+1. "make check" or simply "runtest"
+2. valid command line arguments are SCRAM=foo TESTLEVEL=bar where foo is
+   the absolute path to a scram binary and bar is one of parse,
+   publish-vhdl, publish-c++, build, or simulate.
+3. you should be able to use the -ignore argument on runtest to prune
+   subdirectories. 
+
+4. describe other make targets: e.g., make get-vests
+
+5. if get this:
+   WARNING: program timed out.
+   increase the value on the "set timeout 600" command in
+   config/base-config.exp. 
+
+
+i'll write proper documentation here when i get everything running.
+presently this is serving as my cruft file.....recording my thoughts.
+
+
+
+
+
+A. describe dejagnu_fixes.exp
+
+1. only add procedure definitions to files in lib
+
+2. initialization occurs in file config/default-config.exp
+
+3. when authoring a new testsuite and it's expect script, use only
+   procedures defined in lib/savant_drivers.exp
+
+4. there are two main functions for compliant tests: build_compliant_tests
+   and run_compliant_test.  builds represent vhdl entities that are
+   analyzed and stored in a library but not directly simulatable.  runs are
+   vhdl entities that are built and simulatable.  to conserve space in
+   work, this assumes that work can be deleted after every run.  thus, if
+   you require that a file be reanalyzed into the library for an
+   appropriate run, you must explicitly re-add it as a build prior to a
+   run....sorry about that, but it currently seems foolish to explicitly
+   demand deletes just to save space.  perhaps we could add a argument to
+   run_compliant_test that explicitly disallows library deletion....
+
+
+savant.exp: defininig the basic functions expected by runtest (savant_init,
+            savant_version, etc).
+
+reporting_functions.exp: a couple of simple functions to report errors,
+                         warnings and information.  two levels of
+                         information reporting are supported.
+
+counters.exp: procedures related to counting and reporting of the
+              success/failure of the test run.  these procedures include
+              counters for both group tests (those run from a single expect
+              script) and the overall progress.
+
+savant_drivers.exp: the driving procedures that authors of the expect
+                    scripts in the savant.* tree should use.  authors of
+                    new tests should only use procedures contained in this
+                    file.  if you will, this is the API for the testsuite.
+
+helpers.exp: these are general procedures used to assist the processing by
+             the proedures in savant_drivers.  only procedures not fitting
+             within the classifictaions of the above files should be placed
+             here.
+
+
+i'll write proper documentation here when i get everything running.
+presently this is serving as my cruft file.....recording my thoughts.
+
+DJ was here, again and again

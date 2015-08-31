@@ -1,0 +1,258 @@
+
+# Copyright (C) 2001-2003 Clifton Labs, Inc
+
+# CLIFTON LABS MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+# THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+# NON-INFRINGEMENT.  CLIFTON LABS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED
+# BY LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR DISTRIBUTING
+# THIS SOFTWARE OR ITS DERIVATIVES.
+
+# By using or copying this Software, Licensee agrees to abide by the
+# intellectual property laws, and all other applicable laws of the U.S., and
+# the terms of this license.
+
+# You may modify, distribute, and use the software contained in this package
+# under the terms of the "GNU LIBRARY GENERAL PUBLIC LICENSE" version 2, June
+# 1991. A copy of this license agreement can be found in the file "LGPL",
+# distributed with this archive.
+
+# Authors: Philip A. Wilsey	philip.wilsey@ieee.org
+# 	   Dale E. Martin	dmartin@cliftonlabs.com
+
+# ------------------------------------------------------------------------
+# I am using this file to contain my startup operations.  It's not clear to me
+# that this is the correct place for them, but it appears to fit with the
+# general order of runtest operation.  paw 10/8/2001.
+
+
+# -----------------------------------------------------------------------
+# Helper functions to locate the scram binary and locate the test level to
+# apply.
+# -----------------------------------------------------------------------
+
+# Locate for the scram binary to use....
+proc get_scram_location {} {
+
+    global SCRAMBIN 
+    global env
+
+    report_info2 "Is the SCRAMBIN location specified on the command line....."
+    if [info exists SCRAMBIN] {
+	report_info2 "yes.\n"
+	return ${SCRAMBIN}
+    } else {
+	report_info2 "no.\n"
+    }
+
+    report_info2 "Is the SCRAMBIN location specified as an environment variable...."
+    if {[lsearch [lsort [array names env]] "SCRAMBIN"] != -1} {
+	report_info2 "yes.\n"
+	return $env(SCRAMBIN)
+    } else {
+	report_info2 "no.\n"
+    }
+
+    report_info2 "Is the SCRAMBIN binary located relative to SAVANTROOT...."
+    if {[lsearch [lsort [array names env]] "SAVANTROOT"] != -1 && 
+        [file exists $env(SAVANTROOT)/bin/scram]} {
+	report_info2 "yes.\n"
+	return $env(SAVANTROOT)/bin/scram
+    } else {
+	report_info2 "no.\n"
+    }
+
+    # since dejagnu/autoconf is setup so that you can issue the 'make check'
+    # command from either the savant root or from the testsuite subdirectory,
+    # we have to look from either location for scram.
+
+    set try_here [absolute ../bin]/scram
+
+    report_info2 "Is the SCRAMBIN binary located at ${try_here}....\n"
+    if [file exists ${try_here}] {
+	report_info2 "yes.\n"
+	return ${try_here}
+    } else {
+	report_info2 "no.\n"
+    }
+
+    set try_here [absolute ./bin]/scram
+
+    report_info2 "Is the SCRAMBIN binary located at ${try_here}....\n"
+    if [file exists ${try_here}] {
+	report_info2 "yes.\n"
+	return ${try_here}
+    } else {
+	report_info2 "no.\n"
+    }
+
+    report_error "Unable to locate the scram binary.\n"
+}
+
+# Look for scram command line arguments given given on the runtests command
+# line or in an environment variable....
+proc get_scram_arguments { } {
+
+    global env 
+    global SCRAMARGS
+
+    report_info2 "Is a valid SCRAMARGS defined on the command line...."
+    if {[info exists SCRAMARGS]} {
+	report_info2 "yes.\n"
+        return ${SCRAMARGS}
+    } else {
+	report_info2 "no.\n"
+    }
+
+    report_info2 "Is a valid SCRAMARGS defined as an environment variable...."
+    if {[lsearch [lsort [array names env]] "SCRAMARGS"] != -1} {
+	report_info2 "yes.\n"
+        return $env(SCRAMARGS)
+    } else {
+	report_info2 "no.\n"
+    }
+        
+    # set the default SCRAMARGS (no arguments)
+    return ""
+}
+
+# Find the test level requested by the user....
+proc get_test_level { } {
+
+    global env 
+    global TESTLEVEL 
+
+    set testflags {"parse" "publish-vhdl" "publish-cc" "build" "simulate"}
+
+    report_info2 "Is a valid TESTLEVEL defined on the command line...."
+    if {[info exists TESTLEVEL] && [lsearch ${testflags} ${TESTLEVEL}] != -1} {
+	report_info2 "yes.\n"
+        return ${TESTLEVEL}
+    } else {
+	report_info2 "no.\n"
+    }
+
+    report_info2 "Is a valid TESTLEVEL defined as an environment variable...."
+    if {[lsearch [lsort [array names env]] "TESTLEVEL"] != -1 &&
+	[lsearch ${testflags} $env(TESTLEVEL)] != -1} {
+	report_info2 "yes.\n"
+        return $env(TESTLEVEL)
+    } else {
+	report_info2 "no.\n"
+    }
+        
+    # set the default TESTLEVEL
+    return parse
+}
+
+# Look for redefinitions of the make command (useful for make -j)
+proc get_make_command { } {
+
+    global env 
+    global MAKE
+
+    report_info2 "Is a valid MAKE defined on the command line...."
+    if {[info exists MAKE]} {
+	report_info2 "yes.\n"
+        return ${MAKE}
+    } else {
+	report_info2 "no.\n"
+    }
+
+    report_info2 "Is a valid MAKE defined as an environment variable...."
+    if {[lsearch [lsort [array names env]] "MAKE"] != -1} {
+	report_info2 "yes.\n"
+        return $env(MAKE)
+    } else {
+	report_info2 "no.\n"
+    }
+        
+    # set the default MAKE (no arguments)
+    return "make"
+}
+
+
+# -----------------------------------------------------------------------
+# The following is the startup/setup actions for running savant tests.
+# -----------------------------------------------------------------------
+
+# Record start time/date
+global start_time
+set start_time [lindex [local_exec "date" "" "" ${timeout}] 1]
+
+
+# Locate the scram binary and store in the global variable scram
+report_info2 "Looking for SCRAMBIN binary.\n"
+global scram_binary
+set scram_binary [get_scram_location]
+
+report_info2 "Validation executable file at ${scram_binary}.\n"
+if {![file exists ${scram_binary}] || ![file executable ${scram_binary}]} {
+    report_error "binary file ${scram_binary} not found or not executable."
+}
+
+report_info "The scram binary under test is located at ${scram_binary}.\n"
+
+# Capture the make command that should be used to build the generated c++
+# simulator. 
+
+report_info2 "Looking for a definition for make (e.g., make -j).\n"
+global make_command
+set make_command [get_make_command]
+
+report_info "The make command to be used to build each simulation model is: ${make_command}.\n"
+
+# Capture any scram command line arguments that the user might want to pass
+# in from either the runtest command line or from an environment variable.
+
+report_info2 "Looking for arguments for the scram command line.\n"
+global scram_arguments
+set scram_arguments [get_scram_arguments]
+
+report_info "The following scram arguments were passed in from the outer environment: ${scram_binary}.\n"
+
+# Identify which test level the user is requesting.  The supported test
+# levels are:
+#     parse (default)  analyze, typecheck, and write into a library
+#     publish-vhdl     attempt sanity check on publish_vhdl methods by
+#                      writing vhdl twice and comparing the result
+#     publish-c++      do parse (above) and then generate c++ code
+#     build            compile the c++ output by the code generator
+#     simulate         attempt to simulte the c++ code
+
+# Store the test level in the global variable test_level
+global scram_test_level
+set scram_test_level [get_test_level]
+
+report_info "The test level requested for this run is: ${scram_test_level}.\n"
+
+# The library to put intermediate vhdl and c++ files is stored in the
+# global variable scram_library
+global scram_library
+set scram_library "work"
+
+report_info "The default library for this run is: ${scram_library}.\n"
+
+# Ensure that test_name and language_std are clear
+global test_name
+global language_std
+
+set test_name ""
+set language_std ""
+
+# Create a temporary filenames for testing the publish-vhdl operation.
+global publish_vhdl_tmp_file
+
+# i can't make this work properly so i'm gonna cheat and use a fixed name....
+#set publish_vhdl_tmp_file  [lindex [local_exec "mktemp /tmp/scramCheck.XXXXXX" "" "" ${timeout}] 1]
+set publish_vhdl_tmp_file  "/tmp/scramCheck.XXXXXX"
+
+global global_list_of_counters
+set global_list_of_counters ""
+
+# increase the default timeout (seconds) to 20 minutes.  timeout is the amount
+# of that the local_exec command allows a command to attempt execution.
+set timeout 1200
+
+# clear work library before initiating test run....
+delete_lib work

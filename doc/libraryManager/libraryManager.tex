@@ -1,0 +1,296 @@
+
+\documentclass[11pt]{report}
+
+\usepackage{alltt,color,fullpage,psfig}
+
+\newcommand{\version}{0.9}
+
+\begin{document}
+
+\title{
+\textbf{SAVANT Library Managment} \\
+(Documentation for version \version)}
+
+\author{
+\emph{Radharamanan Radhakrishnan} and \emph{Philip A.  Wilsey} \\
+Computer Architecture Design Laboratory \\
+Dept of ECECS, PO Box 210030 \\
+Cincinnati, OH  45221--0030 \\
+\texttt{\{ramanan,paw\}@ececs.uc.edu}
+}
+
+\date{}
+
+\maketitle
+
+\vspace*{6in}
+
+\noindent
+Copyright $\copyright$ 1998 The University of Cincinnati.  All
+rights reserved.  
+
+\bigskip
+
+\noindent
+Published by the University of Cincinnati \\
+Dept of ECECS, PO Box 210030 \\
+Cincinnati, OH  45221--0030 USA 
+
+\bigskip
+
+\noindent
+Permission is granted to make and distribute verbatim copies of
+this manual provided the copyright notice and this permission notice
+are preserved on all copies.
+
+\medskip
+\noindent
+Permission is granted to copy and distribute modified versions of this
+manual under the conditions for verbatim copying, provided that the entire
+resulting derived work is distributed under the terms of a permission
+notice identical to this one.
+
+\medskip
+\noindent
+Permission is granted to copy and distribute translations of this manual
+into another language, under the above conditions for modified versions.
+
+\newpage
+
+\tableofcontents
+
+\chapter{Introduction}
+
+The ability of separating a VHDL description into separate independent
+libraries necessitate the existence of a library manager.  As specified by
+the VHDL language reference manual (LRM) (chapter 11), parts of a VHDL
+description can be separately compiled into a library and accessed in
+other parts of the VHDL description.  The library manager has been
+designed to take care of this functionality.  It allows the user to create
+design libraries and helps the parser locate design libraries that are
+referenced in other VHDL descriptions.
+
+The following sections describe the specific aspects of the language and
+describes the rules that the library manager must conform to.  The next
+chapter deals with the specifics of the implementation and describes the
+methods used to invoke the library manager.
+
+\section{Design Units}
+
+Certain constructs in a VHDL source file may be independently analyzed and
+inserted into a design library; these constructs are called \texttt{design
+units}.  One or more design units in a sequence comprise a \texttt{design
+file}.  Design units in a design file are analyzed in the textual order of
+their appearance in the design file.  Analysis of a design unit defines
+the corresponding library unit in a design library.  A \texttt{library
+unit} is either a primary unit or a secondary unit.  A secondary unit is a
+separately analyzed body of a primary unit resulting from a previous
+analysis.  The BNF notation of the constructs are given below :
+ 
+\begin{alltt}
+design\_file ::= design\_unit { design\_unit }
+
+design\_unit ::= context\_clause library\_unit
+
+library\_unit ::= primary unit | secondary unit
+
+primary\_unit ::= entity\_declaration | configuration\_declaration 
+                                    | package\_declaration 
+
+secondary\_unit ::= architecture\_body | package\_body
+\end{alltt}
+
+\section{Design Libraries}
+
+A \texttt{design library} is an implementation-dependent storage facility
+for previously analyzed design units.  A given implementation is required
+to support any number of design libraries.
+
+\begin{alltt}
+library\_clause ::= LIBRARY logical\_name\_list;
+
+logical\_name\_list ::= logical\_name {, logical\_name}
+
+logical\_name ::= identifier
+
+context\_clause ::= { context\_item }
+
+content\_item ::= library\_clause | use\_clause
+\end{alltt}
+
+A library clause defines logical names for design libraries in the host
+environment.  A library clause appears as part of a context clause at the
+beginning of a design unit.  There is a certain region of text called the
+\texttt{scope} of a library clause;this region starts immediately after
+the library clause, and it extends to the end of the declarative region
+associated with the design unit in which the library clause appears.
+Within this scope each logical name defined by the library clause is
+directly visible, except where hidden in an inner declarative region by a
+homo-graph of the logical name according to the rules in Section 10.3 of
+the LRM.
+
+There are two classes of design libraries: working libraries and resource
+libraries.  A \texttt{working library} is the library into which the
+library unit resulting from the analysis of design unit is placed.  A
+\texttt{resource library} is a library containing library units that are
+referenced within the design unit being analyzed.  Only one library may be
+the working library during the analysis of any given design unit; in
+contrast, any number of libraries (including the working library itself)
+may be resource libraries during such an analysis.
+
+For a given library logical name, the actual name of the corresponding
+design libraries in the host environment may or may not be the same.  A
+given implementation must provide some mechanism to associate a library
+logical name with a host-dependent library.  Such a mechanism is not
+defined by the language.  The current implementation of the library
+manager supports such a scheme for the working library alone.  All
+reference libraries's logical names are assumed to have the same logical
+and actual name in the host environment.
+
+Every design unit except package STANDARD is assumed to contain the
+following implicit context items as part of its context clause:
+
+\begin{alltt}
+        library STD, WORK; use STD.STANDARD.all;
+\end{alltt}
+
+Library logical name STD denotes the design library in which the package
+STANDARD and package TEXTIO reside;these are the only standard packages
+defined by the language.  The use clause makes all declarations within
+package STANDARD directly visible within the corresponding design unit.
+Library logical name WORK denotes the current working library during a
+given analysis.
+
+\section{Order of Analysis}
+
+The rules defining the order in which design units can be analyzed are
+direct consequences of the visibility rules.  In particular:
+
+\begin{enumerate}
+
+\item
+A primary unit whose name is referenced within a given design unit must be
+analyzed prior to the analysis of the given design unit.
+
+\item
+A primary unit must be analyzed prior to the analysis of any corresponding
+secondary unit.
+
+\end{enumerate}
+
+In each case, the second unit \texttt{depends on} the first unit.  The
+order in which design units are analyzed must be consistent with the
+partial ordering defined by the above rules.
+
+A given library unit is potentially affected by a change in any library
+unit whose name is referenced within the given library unit.  A secondary
+unit is potential affected by a change in its corresponding primary unit.
+A secondary unit is potentially affected by a change in its corresponding
+primary unit.  If a library unit is changed (e.g., by reanalysis of the
+corresponding design unit), then all library units that are potentially
+affected by such a change become obsolete and must be reanalyzed before
+they can be used again.
+
+\chapter{User Manual}
+
+This chapter discusses the methods used to invoke the library manager.  It
+also describes some of the naming issues used by the library manager.
+
+\section{Invoking the Library Manager}
+
+There is only one command line parameter to the \texttt{scram} executable
+that explicitly deals with the library manager.
+
+\begin{enumerate}
+
+\item
+The \texttt{-design-library-name} option is used when the user wants to
+create a design library.  Along with the "-design-library-name" flag, the
+user must provide the actual design library name.  Please note that this
+actual design library name must be used when the design library is used as
+a reference library in another design unit.  When \texttt{scram} is
+invoked with this option, for each design unit it parses, it downloads the
+VHDL for this design unit into the specified directory.  Currently the
+parser writes VHDL~\footnote{Code-generation also writes C++ code into
+this directory.} to this directory.  In the next release, the file
+intermediate representation(FIR) will be written out to the disk instead
+of VHDL source.
+
+\end{enumerate}
+
+In addition, to writing out the VHDL source for each design unit (primary
+units are placed within the specified directory and the secondary units
+are placed one directory level lower than their corresponding primary
+units), the library manager writes out a Makefile for the design library
+directory.  C++ code generation is also done, so that the design library
+may be archived into a library file (lib.a).
+
+The name mangling scheme used by the library manager is:
+
+\begin{alltt}
+
+<design\_library\_name> becomes <design\_library\_name>.\_savant\_lib/
+
+<primary\_unit\_name> becomes   <primary\_unit\_name>\_entity.vhdl 
+                            | <primary\_unit\_name>\_configuration.vhdl 
+                            | <primary\_unit\_name>\_package.vhdl
+
+Secondary units are placed into a separate directory within the design
+library directory.  The naming convention for this separate directory is
+as follows :
+
+Directory name is <primary\_unit\_name>\_secondary\_units.\_savant\_lib/
+
+<secondary\_unit\_name> becomes 
+          <primary\_unit\_name>\_<secondary\_unit\_name>\_arch.vhdl
+        | <primary\_unit\_name>\_<secondary\_unit\_name>\_package\_body.vhdl
+\end{alltt}
+
+The name mangling scheme is used to differentiate between names that are
+often used repetitively in several design units.  These names may conflict
+with each other, when all the design units are being archived into a
+single design library.  The same mangling scheme is used by the parser
+(with the help of the library manager) when it is looking for design units
+in a particular design library.
+
+An example of a typical invocation of the library manager is:
+
+\begin{alltt}
+        scram -design-library-name "SHARC" SHARC\_datatype.vhdl
+        or
+        scram -no-library-manager -publish-vhdl SHARC\_datatype.vhdl
+\end{alltt}
+
+As mentioned earlier, every implementation has a working library
+associated with every library unit that is analyzed.  \texttt{scram}
+auto-magically creates a "work" directory whenever it is invoked.
+Although the current version of the library manager archives the VHDL
+source, the next version of the library manager will attempt to archive
+analyzed design units in the file intermediate representation (FIR).  The
+FIR is designed specifically for this reason.  As the FIR is an
+intermediate form of the abstract parse tree, it is more efficient to
+store and reread FIR than it is to store and reparse VHDL.
+
+\chapter*{Acknowledgments}
+
+This research has been conducted with the participation of many
+investigators.  While not an complete list, the following individuals
+have made notable direct and/or indirect contributions to this effort
+(in alphabetical order):
+Jeff Carter,
+Harold Carter,
+Praveen Chawla,
+John Hines,
+Herb Hirsch,
+Timothy J.  McBrayer,
+Greg Peterson,
+Al Scarpelli,
+Mike Shellhause and
+John Willis.
+We wish to express our sincerest gratitude for the time that you spent
+reviewing and commenting on our designs.
+
+This research was supported in part by MTL Systems, Inc and the Wright
+Laboratory at Wright-Patterson AFB.  Thank you for your support.
+
+\end{document}

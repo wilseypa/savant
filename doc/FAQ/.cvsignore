@@ -1,0 +1,10 @@
+Makefile
+Makefile.in
+*.log
+*.dvi
+*.aux
+Savant-FAQ.pdf
+Savant-FAQ.txt
+Savant-FAQ.toc
+Savant-FAQ.ps
+Savant-FAQ

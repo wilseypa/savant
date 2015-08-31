@@ -1,0 +1,126 @@
+/** \mainpage Savant Documentation index.
+	
+ \section intro Introduction
+
+The SAVANT project is an effort by University of Cincinnati's
+Experimental Computing Laboratory to build an extensible,
+object-oriented intermediate form (IIR) for the hardware description
+language VHDL. The project started as a joint effort between MTL Systems
+and the University, with funding from the Air Force. The project
+produced a suite of software to analyze VHDL, build the IIR, and output
+C++ suitable for execution with the TyVIS VHDL simulation kernel. The
+software developed under the SAVANT project is freely available. Users
+may modify, distribute, and use the software contained in the SAVANT
+software package under the terms of the "GNU LIBRARY GENERAL PUBLIC
+LICENSE" version 2, June 1991.
+
+The primary goal of SAVANT is to stimulate research among the VHDL
+community by providing an extensible, object-oriented, well-documented
+intermediate form (IIR) and a freely available analyzer to convert VHDL
+into the IIR.  Because the IIR analyzer is released in source form, the
+additional derived classes can be inserted into the C++ class
+hierarchy. Thus, user actions can benefit fully from the fact that the
+IIR is object-oriented. Consequently, no procedural interface is
+provided or needed.
+
+The SAVANT project was integrated with UC's QUEST and RASSP formal
+semantics projects. This integration provides an end-to-end
+VHDL-to-batch simulation capability. The QUEST VHDL simulation kernel,
+TyVIS, is built on top of the WARPED simulation kernel. Since the WARPED
+software includes both a sequential and a parallel implementations, the
+SAVANT user also has the option of either sequential or parallel
+simulation.
+
+ \section install Installation
+
+ \subsection step1 Step 1: Tools that are known to work
+
+ \subsection environmentvariables Environment variables and what they do
+
+ \subsection foreign Foreign Interface
+
+ Currently, work on foreign architectures has begun.  An example of a
+ foreign architecture looks like the following:
+
+  entity example is
+    port ( input : IN bit_vector( 0 to 7 ));
+  end example;
+
+  architecture only of example is
+
+  attribute foreign of only : architecture is "example.so";
+  begin 
+  end only;
+
+ \section frontend Front End Basics
+
+ \section codegen Code Generator Basics
+
+ \subsection mapping Mapping VHDL into generated files.
+
+ Currently, the following VHDL items get mapped into one or more files:
+ - architecture declarations
+ - block statements
+ - component declarations
+ - generate for statements
+ - generate if statements
+ - configuration declarations
+ - entity declarations
+ - file declarations
+ - package declarations
+ - package body declarations
+ - process statements
+ - subprogram declarations
+ - subtype declarations
+ - type declarations
+
+ Note that all concurrent statements (aside from generated statements)
+ get transformed into equivalent process statements.
+
+ \subsection arch_decls Architecture Declarations 
+
+ Architecture declarations generate several files.  Two files for the
+ declarative region, in the form of "<mangled entity_name>_<mangled
+ architure name>_decls.hh" and .cc.
+
+ Two files get generated to hold elaboration information.  The name is
+ in the form of "<binding name>_elab.hh" and .cc. 
+
+ A binding name for an architecture is in the form of:
+ "SEA<mangled entity name>_<mangled architecture name>".
+
+ \subsection entity_decls Entity Declarations
+
+ Entity Declarations generate several files.  Two files get generated
+ for the entity's declarative region, in the form of "<mangled entity
+ name>_decls.hh" and .cc.
+
+ Two files get generated for elaboration information.  These files have
+ names in the form of "<binding name>_elab.hh" and .cc.
+
+ The binding name for an entity is "SE<mangled entity name>".
+
+ \subsection package_decls Package Declarations
+ 
+ Package declarations generate two files.  The file names are in the
+ form of "<mangled declarator>Pkg_decls.hh" and .cc.
+
+ \subsection process_statements Process Statements
+ 
+ DJ is going to have to write this section - I think it's beyond my
+ comprehension.  I propose that we rewrite some of this so it makes
+ sense to mere mortals.  The whole
+ "_enclosing_stmt_to_architecture_path" seems to be _way_ more
+ complicated than needed.
+
+ \subsection subtype_decls Subtype Declarations
+
+ Subtype declarations generate two files.  The file names are in the
+ form of "Savant<mangled declarator>Type.hh" and .cc.
+ 
+ \subsection type_decls Type Declarations
+ 
+ Type declarations generate two files.  The file names are in the form
+ of "Savant<mangled declarator>Type.hh" and .cc.
+
+*/

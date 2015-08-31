@@ -1,0 +1,26 @@
+To compile this project you will need:
+
+* installed cvs version of clutils
+* installed cvs version of savant
+
+To build this project run the following command sequence (from the
+directory of this README): 
+
+autoreconf -i
+./configure --with-clutils=<directory where clutils was installed>
+make
+make install
+
+------------------------------------------------------------------------
+CAUTION:
+
+This subsystem is not built regularily and the autotools authors are famous
+for breaking things.  This was last built by us on 5/5/2010 using a debian
+(testing) box with the following tool versions: 
+
+automake: 1.10.3-1
+autoconf: 2.65-4
+g++: 4.4.2-9
+libtool: 2.2.6b-2
+
+

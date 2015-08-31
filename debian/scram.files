@@ -1,0 +1,8 @@
+usr/bin/scram
+usr/share/man/man1/scram.1
+usr/lib/savant/lib/Makefile.common
+usr/lib/savant/lib/ieee._savant_lib/numeric_std_package.vhdl
+usr/lib/savant/lib/ieee._savant_lib/std_logic_1164_package.vhdl
+usr/lib/savant/lib/ieee._savant_lib/vital_memory_package.vhdl
+usr/lib/savant/lib/ieee._savant_lib/vital_timing_package.vhdl
+usr/lib/savant/lib/std._savant_lib/textio_package.vhdl

@@ -1,0 +1,79 @@
+
+# Copyright (C) 2001-2003 Clifton Labs, Inc
+
+# CLIFTON LABS MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+# THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+# NON-INFRINGEMENT.  CLIFTON LABS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED
+# BY LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR DISTRIBUTING
+# THIS SOFTWARE OR ITS DERIVATIVES.
+
+# By using or copying this Software, Licensee agrees to abide by the
+# intellectual property laws, and all other applicable laws of the U.S., and
+# the terms of this license.
+
+# You may modify, distribute, and use the software contained in this package
+# under the terms of the "GNU LIBRARY GENERAL PUBLIC LICENSE" version 2, June
+# 1991. A copy of this license agreement can be found in the file "LGPL",
+# distributed with this archive.
+
+# Authors: Philip A. Wilsey	philip.wilsey@ieee.org
+# 	   Dale E. Martin	dmartin@cliftonlabs.com
+
+# -----------------------------------------------------------------------
+# Helper functions for error and information reporting.
+# -----------------------------------------------------------------------
+
+# Function to report error messages that occur in running the test suite.
+proc report_error {msg} {
+    verbose "ERROR: ${msg}" 0
+    verbose "Aborting" 0
+    exit 1
+}
+
+# Function to report warning messages that occur in running the test suite.
+proc report_warning {msg} {
+    verbose "WARNING: ${msg}" 0
+}
+
+# Function to report information messages that occur in running the test
+# suite.  These messages will only occur if runtests is invoked with the -v
+# switch. 
+proc report_info {msg} {
+    verbose -n ${msg} 1
+}
+
+# Function to report information messages that occur in running the test
+# suite.  These messages will only occur if runtests is invoked with the -v -v
+# switches.  Use this for providing extreme detail information for the test
+# run. 
+proc report_info2 {msg} {
+    verbose -n ${msg} 2
+}
+
+# The summary results should be written into the "results" file as well as
+# cloned into the dejagnu log and summary files. 
+proc write_results {msg} {
+
+    global results_file
+
+    puts ${results_file} ${msg}
+    clone_output ${msg}
+}
+
+# Setup a file called "results" where the summary results from the test
+# counters can be  recorded.   
+proc open_results { } {
+    global outdir
+    global results_file
+
+    catch "exec rm -f $outdir/results"
+    set results_file [open "$outdir/results" w]
+}
+
+# Close the results file.
+proc close_results { } {
+    global results_file
+
+    catch "close ${results_file}"
+}

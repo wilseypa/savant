@@ -1,0 +1,44 @@
+Unsupported:
+-----------
+
+Static elaboration.
+
+Analyzer:
+---------
+Doesn't support partial element associations in association lists.
+
+Doesn't do any static bounds checking.
+
+Others not supported in record initialization.
+
+Others and All not supported in disconnection specifications.
+
+Others and All not supported in attribute specifications.
+
+Configurations not supported as instantiated units in component
+instantiations.
+
+Block configurations within component configurations aren't handled.
+
+
+Codegen:
+--------
+OTHERS not supported in aggregate initialization.
+
+Files declared in architectures aren't supported.
+
+Shared variables, aliases, files, disconnection specifications, groups, and 
+group templates not supported in packages.
+
+Package bodies support none of the previous list, plus attribute
+declarations or specifications.
+
+Buffer and linkage mode signals not supported in component instantiation
+statements.
+
+Buffer and linkage mode signals not supported in block statements.
+
+OTHERS and ALL not supported in instantiation lists of component
+configurations.
+
+Nested procedures and functions not fully implemented yet.

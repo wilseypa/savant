@@ -1,0 +1,8 @@
+Makefile
+Makefile.in
+site.exp
+site.bak
+savant.log
+savant.sum
+savant.vests
+*._savant_lib

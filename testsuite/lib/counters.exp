@@ -1,0 +1,360 @@
+
+# Copyright (C) Clifton Labs, Inc
+# All rights reserved.
+
+# CLIFTON LABS MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+# THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+# NON-INFRINGEMENT.  CLIFTON LABS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED
+# BY LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR DISTRIBUTING
+# THIS SOFTWARE OR ITS DERIVATIVES.
+
+# By using or copying this Software, Licensee agrees to abide by the
+# intellectual property laws, and all other applicable laws of the U.S., and
+# the terms of this license.
+
+# You may modify, distribute, and use the software contained in this package
+# under the terms of the "GNU LIBRARY GENERAL PUBLIC LICENSE" version 2, June
+# 1991. A copy of this license agreement can be found in the file "LGPL",
+# distributed with this archive.
+
+# -----------------------------------------------------------------------
+# This group of functions setup tracking of the results of the tests.
+# Global counters are defined to track the results.
+# -----------------------------------------------------------------------
+
+proc reset_group_counters {} {
+    global num_of_tests_in_group
+    global num_of_run_tests
+    global num_of_build_tests
+    global num_of_compliant_tests
+    global num_of_compliant_passes
+    global num_of_non_compliant_tests
+    global num_of_non_compliant_passes
+    global num_of_analyzer_passes
+    global num_of_analyzer_failures
+    global num_of_analyzer_pass2_passes
+    global num_of_analyzer_pass2_failures
+    global num_of_publish_vhdl_passes
+    global num_of_publish_vhdl_failures
+    global num_of_publish_cc_passes
+    global num_of_publish_cc_failures
+    global num_of_build_passes
+    global num_of_build_failures
+    global num_of_simulation_passes
+    global num_of_simulation_failures
+
+    set num_of_tests_in_group 0
+    set num_of_run_tests 0
+    set num_of_build_tests 0
+    set num_of_compliant_tests 0
+    set num_of_compliant_passes 0
+    set num_of_non_compliant_tests 0
+    set num_of_non_compliant_passes 0
+    set num_of_analyzer_passes 0
+    set num_of_analyzer_failures 0
+    set num_of_analyzer_pass2_passes 0
+    set num_of_analyzer_pass2_failures 0
+    set num_of_publish_vhdl_passes 0
+    set num_of_publish_vhdl_failures 0
+    set num_of_publish_cc_passes 0
+    set num_of_publish_cc_failures 0
+    set num_of_build_passes 0
+    set num_of_build_failures 0
+    set num_of_simulation_passes 0
+    set num_of_simulation_failures 0
+}
+
+proc dump_counters {counters} {
+
+    global scram_arguments
+    global scram_test_level
+    global language_std
+
+    if {${counters} == ""} {
+	report_error "No counters to report; were any tests run?"
+    }
+
+    if {${scram_test_level} == "publish-vhdl"} {
+	report_error "The dump_publish_vhdl_counters should be called instead of dump_counters when testlevel=publish-vhdl."
+    }
+
+    set total_tests 0
+    set total_all_pass 0
+    set total_comp 0
+    set total_non_comp 0
+    set total_comp_pass 0
+    set total_non_comp_pass 0
+
+    foreach i ${counters} {
+	foreach j [split ${i} ","] {
+	    set wk([lindex [split ${j} "="] 0]) [lindex [split ${j} "="] 1]
+	}
+
+	write_results "Test Name: ${wk(name)}, test level: ${scram_test_level}, environment scram arguments: ${scram_arguments}"
+	write_results "                Total      Passed     Failed    % of Total  |  Comp    Non-comp    Pass    Fail    % Success"
+
+        write_results "============================================================================================================" 
+
+	set total_comp [expr ${total_comp} + ${wk(compliant_total)}]
+	set total_comp_pass [expr ${total_comp_pass} + ${wk(compliant_passes)}]
+	set total_non_comp [expr ${total_non_comp} + ${wk(non_compliant_total)}]
+	set total_non_comp_pass [expr ${total_non_comp_pass} + ${wk(non_compliant_passes)}]
+
+	write_results [format "Parse           %5d       %5d      %5d       %6.2f%%  | %5d       %5d   %5d   %5d      %6.2f%%" \
+	    ${wk(total)} ${wk(analyzer_p)} ${wk(analyzer_f)} \
+	    [expr double(${wk(analyzer_p)}) / double(${wk(total)}) * 100.00] \
+	    ${wk(compliant_total)} ${wk(non_compliant_total)} \
+	    [expr ${wk(compliant_passes)} + ${wk(non_compliant_passes)}] \
+	    [expr (${wk(compliant_total)} + ${wk(non_compliant_total)}) - (${wk(compliant_passes)} + ${wk(non_compliant_passes)})] \
+	    [expr double(${wk(compliant_passes)} + ${wk(non_compliant_passes)}) / double(${wk(compliant_total)} + ${wk(non_compliant_total)}) * 100.00]]
+	set total_passed ${wk(analyzer_p)}
+
+	if {[lsearch [concat "publish-cc" "build" "simulate"] ${scram_test_level}] != -1} {
+	    write_results [format "Publish-cc      %5d       %5d      %5d       %6.2f%%  |" \
+                ${wk(analyzer_p)} ${wk(publish_cc_p)} ${wk(publish_cc_f)} \
+		[expr double(${wk(publish_cc_p)}) / double(${wk(total)}) * 100.00]]
+	    set total_passed ${wk(publish_cc_p)}
+	}
+
+	if {[lsearch [concat "build" "simulate"] ${scram_test_level}] != -1} {
+	    write_results [format "Build           %5d       %5d      %5d       %6.2f%%  |" \
+		${wk(publish_cc_p)} ${wk(build_p)} ${wk(build_f)} \
+		[expr double(${wk(build_p)}) / double(${wk(total)}) * 100.00]]
+	    set total_passed ${wk(build_p)}
+	}
+
+	# not everything that is built is simulated so we'll compute the total by summing the passes/failures
+	if {[lsearch [concat "simulate"] ${scram_test_level}] != -1} {
+	    write_results [format "Simulate        %5d       %5d      %5d       %6.2f%%  |" \
+		[expr ${wk(simulate_p)} + ${wk(simulate_f)}] ${wk(simulate_p)} ${wk(simulate_f)} \
+		[expr double(${wk(simulate_p)}) / double(${wk(total)}) * 100.00]]
+	    set total_passed ${wk(simulate_p)}
+	}
+
+        write_results "============================================================================================================" 
+
+	set total_tests [expr ${total_tests} + ${wk(total)}]
+	set total_all_pass [expr ${total_all_pass} + ${total_passed}]
+
+    }
+
+        write_results "============================================================================================================" 
+
+	write_results [format "Summary Totals                                              | %5d       %5d   %5d   %5d      %6.2f%%" \
+	    ${total_comp} ${total_non_comp} [expr ${total_comp_pass} + ${total_non_comp_pass}] \
+	    [expr (${total_comp} + ${total_non_comp}) - (${total_comp_pass} + ${total_non_comp_pass})] \
+	    [expr double(${total_comp_pass} + ${total_non_comp_pass}) / double(${total_comp} + ${total_non_comp}) * 100.00]]
+
+        write_results "============================================================================================================" 
+    
+}
+
+proc dump_publish_vhdl_counters {counters} {
+
+    global scram_test_level
+    global language_std
+
+    if {${counters} == ""} {
+	report_error "No counters to report; were any tests run?"
+    }
+
+    if {${scram_test_level} != "publish-vhdl"} {
+	report_error "The dump_counters should be called instead of dump_publish_vhdl_counters for testlevel=${scram_test_level}."
+    }
+
+    set total_tests 0
+    set total_all_pass 0
+    set total_comp 0
+    set total_non_comp 0
+    set total_comp_pass 0
+    set total_non_comp_pass 0
+
+    foreach i ${counters} {
+	foreach j [split ${i} ","] {
+	    set wk([lindex [split ${j} "="] 0]) [lindex [split ${j} "="] 1]
+	}
+
+	write_results "Test Name: ${wk(name)}, test level: ${scram_test_level}"
+	write_results "                     Total      Passed     Failed   %% of Total"
+
+        write_results "==============================================================="
+
+	write_results [format "Parse                %5d       %5d      %5d       %6.2f%%" \
+	    ${wk(total)} ${wk(analyzer_p)} ${wk(analyzer_f)} \
+	    [expr double(${wk(analyzer_p)}) / double(${wk(total)}) * 100.00]]
+
+	write_results [format "ReParse              %5d       %5d      %5d       %6.2f%%" \
+	    ${wk(analyzer_p)} ${wk(analyzer2_p)} ${wk(analyzer2_f)} \
+	    [expr double(${wk(analyzer2_p)}) / double(${wk(total)}) * 100.00]]
+
+	write_results [format "Equivalent Output    %5d       %5d      %5d       %6.2f%%" \
+	    ${wk(analyzer2_p)} ${wk(publish_vhdl_p)} ${wk(publish_vhdl_f)} \
+	    [expr double(${wk(publish_vhdl_p)}) / double(${wk(total)}) * 100.00]]
+
+        write_results "==============================================================="
+    }
+}
+
+# this procedure will package the counters for a group into a list and add
+# them to a global list
+proc package_group_counters {args} {
+
+    global global_list_of_counters
+
+    global test_name
+    global num_of_tests_in_group
+    global num_of_run_tests
+    global num_of_build_tests
+    global num_of_compliant_tests
+    global num_of_compliant_passes
+    global num_of_non_compliant_tests
+    global num_of_non_compliant_passes
+    global num_of_analyzer_passes
+    global num_of_analyzer_failures
+    global num_of_analyzer_pass2_passes
+    global num_of_analyzer_pass2_failures
+    global num_of_publish_vhdl_passes
+    global num_of_publish_vhdl_failures
+    global num_of_publish_cc_passes
+    global num_of_publish_cc_failures
+    global num_of_build_passes
+    global num_of_build_failures
+    global num_of_simulation_passes
+    global num_of_simulation_failures
+
+    set group_list "name=${test_name},total=${num_of_tests_in_group},run_total=${num_of_run_tests},compliant_total=${num_of_compliant_tests},compliant_passes=${num_of_compliant_passes},non_compliant_total=${num_of_non_compliant_tests},non_compliant_passes=${num_of_non_compliant_passes},build_total=${num_of_build_tests},analyzer_p=${num_of_analyzer_passes},analyzer_f=${num_of_analyzer_failures},analyzer2_p=${num_of_analyzer_pass2_passes},analyzer2_f=${num_of_analyzer_pass2_failures},publish_vhdl_p=${num_of_publish_vhdl_passes},publish_vhdl_f=${num_of_publish_vhdl_failures},publish_cc_p=${num_of_publish_cc_passes},publish_cc_f=${num_of_publish_cc_failures},build_p=${num_of_build_passes},build_f=${num_of_build_failures},simulate_p=${num_of_simulation_passes},simulate_f=${num_of_simulation_failures}"
+
+    lappend global_list_of_counters ${group_list}
+}
+
+proc increment_test_counter {test_case} {
+    global num_of_tests_in_group
+
+    set num_of_tests_in_group [expr ${num_of_tests_in_group} + 1]
+}
+
+proc increment_run_test_counter {test_case} {
+    global num_of_run_tests
+    global num_of_compliant_tests
+
+    set num_of_run_tests [expr ${num_of_run_tests} + 1]
+    set num_of_compliant_tests [expr ${num_of_compliant_tests} + 1]
+}
+
+proc increment_build_test_counter {test_case} {
+    global num_of_build_tests
+    global num_of_compliant_tests
+
+    set num_of_build_tests [expr ${num_of_build_tests} + 1]
+    set num_of_compliant_tests [expr ${num_of_compliant_tests} + 1]
+}
+
+proc increment_non_compliant_test_counter {test_case} {
+    global num_of_non_compliant_tests
+
+    set num_of_non_compliant_tests [expr ${num_of_non_compliant_tests} + 1]
+}
+
+proc increment_compliant_test_pass_result {} {
+    global num_of_compliant_passes
+
+    set num_of_compliant_passes [expr ${num_of_compliant_passes} + 1]
+}
+
+proc increment_non_compliant_test_pass_result {} {
+    global num_of_non_compliant_passes
+
+    set num_of_non_compliant_passes [expr ${num_of_non_compliant_passes} + 1]
+}
+
+proc record_compliant_test_result {test_case test_result} {
+    if {${test_result} == "pass"} {
+	increment_compliant_test_pass_result
+	pass ${test_case}
+    } else {
+	fail "${test_case} [lindex [split ${test_result} "="] 1]"
+    }
+}
+
+proc record_non_compliant_test_result {test_case test_result} {
+    if {${test_result} == "pass"} {
+	fail ${test_case}
+    } else {
+	increment_non_compliant_test_pass_result
+	pass "${test_case} [lindex [split ${test_result} "="] 1]"
+    }
+}
+
+proc record_analyzer_result {test_case test_result} {
+    global num_of_analyzer_passes
+    global num_of_analyzer_failures
+
+    if {${test_result} == "pass"} {
+	set num_of_analyzer_passes [expr ${num_of_analyzer_passes} + 1]
+    } else {
+	set num_of_analyzer_failures [expr ${num_of_analyzer_failures} + 1]
+    }
+}
+
+# used to count the pass/failure of the second analyzer pass for the publish-vhdl tests 
+proc record_analyzer_pass2_result {test_case test_result} {
+    global num_of_analyzer_pass2_passes
+    global num_of_analyzer_pass2_failures
+
+    if {${test_result} == "pass"} {
+	set num_of_analyzer_pass2_passes [expr ${num_of_analyzer_pass2_passes} + 1]
+    } else {
+	set num_of_analyzer_pass2_failures [expr ${num_of_analyzer_pass2_failures} + 1]
+    }
+}
+
+proc record_publish_vhdl_result {file_name test_result} {
+    global num_of_publish_vhdl_passes
+    global num_of_publish_vhdl_failures
+
+    if {${test_result} == "pass"} {
+	set num_of_publish_vhdl_passes [expr ${num_of_publish_vhdl_passes} + 1]
+    } else {
+	set num_of_publish_vhdl_failures [expr ${num_of_publish_vhdl_failures} + 1]
+    }
+}
+
+proc record_publish_cc_result {file_name test_result} {
+    global num_of_publish_cc_passes
+    global num_of_publish_cc_failures
+
+    if {${test_result} == "pass"} {
+	set num_of_publish_cc_passes [expr ${num_of_publish_cc_passes} + 1]
+	report_info2 "Recording a publish-cc pass: ${num_of_publish_cc_passes}.\n"
+    } else {
+	set num_of_publish_cc_failures [expr ${num_of_publish_cc_failures} + 1]
+	report_info2 "Recording a publish-cc fail: ${num_of_publish_cc_failures}.\n"
+    }
+}
+
+proc record_build_result {file_name test_result} {
+    global num_of_build_passes
+    global num_of_build_failures
+
+    if {${test_result} == "pass"} {
+	set num_of_build_passes [expr ${num_of_build_passes} + 1]
+	report_info2 "Recording a build pass: ${num_of_build_passes}.\n"
+    } else {
+	set num_of_build_failures [expr ${num_of_build_failures} + 1]
+	report_info2 "Recording a build fail: ${num_of_build_failures}.\n"
+    }
+}
+
+proc record_simulation_result {file_name test_result} {
+    global num_of_simulation_passes
+    global num_of_simulation_failures
+
+    if {${test_result} == "pass"} {
+	set num_of_simulation_passes [expr ${num_of_simulation_passes} + 1]
+	report_info2 "Recording a simulation pass: ${num_of_simulation_passes}.\n"
+    } else {
+	set num_of_simulation_failures [expr ${num_of_simulation_failures} + 1]
+	report_info2 "Recording a simulation fail: ${num_of_simulation_failures}.\n"
+    }
+}

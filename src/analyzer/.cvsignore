@@ -1,0 +1,11 @@
+VHDLLexer.cc
+VHDLParser.cpp
+VHDLParser.h
+VHDLTokenTypes.hh
+vhdl.cpp
+.deps
+.libs
+Makefile
+Makefile.in
+*.la
+*.lo

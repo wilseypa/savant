@@ -1,0 +1,48 @@
+GUIDELINES FOR BUILDING/INSTALLING SAVANT FOR SIMULATION:
+---------------------------------------------------------
+
+In order to simulate VHDL with SAVANT, some additional tools will be
+required.  TyVis is a VHDL simulation library developed at the University
+of Cincinnati that works with SAVANT.  It's a C++ class library that
+encapsulates VHDL semantics such as signals and the simulation cycle.
+WARPED, also developed at the University of Cincinnati, is a discrete event 
+simulation kernel.  WARPED supports both parallel and sequential
+simulation, and therefore so does TyVis.
+
+To see the requirements for compiling SAVANT itself, please see the file
+INSTALL.
+
+In order to simulate VHDL with SAVANT, you'll need a compatible
+version of TyVis and WARPED as well.  All of the tools can be found at:
+
+https://github.com/wilseypa
+
+Compilation of these tools so that they'll work together is slightly
+complex, and in the past some users have found it difficult.  We've tried
+to explain the process as clearly as possible in the following sections.
+
+[1.0] Unpack all of the archives.  "clutils-<version>", "savant-<version>",
+"warped-<version>", and "tyvis-<version>" directories will be created.
+
+[1.1] Build clutils as per clutil's INSTALL documentation.  Make sure you
+configure it with the "prefix" that you want, and do a "make install".
+
+[1.2] Build savant as per savant's INSTALL documentation.  Make sure you
+configure it with the "prefix" that you want, and do a "make install".
+
+[1.3] Build warped as per warped's INSTALL documentation.  Make sure you
+configure it with the "prefix" that you want, and do a "make install".
+
+[1.4] Build tyvis as per the INSTALL documentation.  Make sure you
+configure it with the "prefix" that you want, and do a "make install".
+
+In theory you're ready to go.  If you have problems, things you can look
+at:
+- If you installed into a prefix other than /usr/local or /usr, do you have
+"LD_LIBRARY_PATH" defined correctly?  (See the manpages for ld.so or
+ld.so.1 for more information.)
+
+- If you've moved the scram binary out of the directory it installed to
+with "make install", you can use "SAVANTROOT" to tell it where to find it's
+libaries.
+

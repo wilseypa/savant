@@ -1,0 +1,54 @@
+
+# Copyright (C) 2001-2003 Clifton Labs, Inc
+
+# CLIFTON LABS MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+# THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+# NON-INFRINGEMENT.  CLIFTON LABS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED
+# BY LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR DISTRIBUTING
+# THIS SOFTWARE OR ITS DERIVATIVES.
+
+# By using or copying this Software, Licensee agrees to abide by the
+# intellectual property laws, and all other applicable laws of the U.S., and
+# the terms of this license.
+
+# You may modify, distribute, and use the software contained in this package
+# under the terms of the "GNU LIBRARY GENERAL PUBLIC LICENSE" version 2, June
+# 1991. A copy of this license agreement can be found in the file "LGPL",
+# distributed with this archive.
+
+# Authors: Philip A. Wilsey	philip.wilsey@ieee.org
+# 	   Dale E. Martin	dmartin@cliftonlabs.com
+
+# -----------------------------------------------------------------------
+# Rewrites of dejagnu functions that don't function in ways that we'd like.
+# -----------------------------------------------------------------------
+
+
+proc find { rootdir pattern } {
+
+    set dirs ""
+    foreach i ${rootdir} {
+	verbose "Looking for all subdirectories of ${i}" 3
+	set dirs [concat ${dirs} ${i} [getdirs "-all" $i]]
+    }
+
+    # find all the files that match the pattern
+    foreach i $dirs {
+	verbose "Looking in $i" 3
+	set tmp [glob -nocomplain $i/$pattern]
+	if { [llength $tmp] != 0 } {
+	    foreach j $tmp {
+		if ![file isdirectory $j] {
+		    lappend files $j
+		    verbose "Adding $j to file list" 3
+		}
+	    }
+	}
+    }
+    
+    if ![info exists files] {
+	lappend files ""
+    }
+    return $files
+}

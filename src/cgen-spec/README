@@ -1,0 +1,78 @@
+This directory contains the list of files, that specify the Special/Extra
+requirements needed by the code-generator or any other module in the
+Internal Intermediate Representation.
+
+The requirements have been added for following reasons:
+	1) There may not be a way to traverse to closely related nodes in
+the actual spec
+	2) Due to limitations in the spec
+	3) To use the information already collected by one Module(usually
+parser) during its operation phase, by another module(usually  code-generator), instead of re-collecting.
+
+	The Special/Extra requirements have been achieved through
+extension methods or members in the iir-classes. 
+
+Format of Requirement Specification
+------------------------------------
+Specification ID:
+Date of Requirement Submission:
+Related Specifications:
+VHDL-Construct(s):
+User Module(s):
+Developer Module(s):
+IIR Node(s): 
+Purpose: 
+Detailed Specification:
+Status:
+Date of Requirement Satisfaction:
+Files Modified:
+Developer's Comments:
+
+
+Requirement Specification Format items in Detail:
+-------------------------------------------------
+Specification ID:
+	Can be a section number in the VHDL LRM or any other
+usefuleName/Number helping in identifying the problem (or could be event
+the requirement Specification File)
+	This can also be specified in the BUGS file, if any bug related to
+this specification.
+
+Date of Requirement Submission:
+
+Related Specifications:
+	Specification Id, or Filenames containing related/similar Requirements specification.
+
+VHDL-Construct(s):
+	for example: Configuration Declarations
+	and also othe associated constructs like port-mapaspec,
+generic-map-aspect etc.
+
+User Module(s):
+	Module needing the Requirement becomes the user module.
+
+Developer Module(s):
+	The module that satisfy  the requirement.
+
+IIR Node(s): 
+	The AIRE-spec classes that gets extended or that use proposed extensions.
+
+Purpose: 
+	Purpose of request.
+
+Detailed Specification: 
+	no particular format as long as the Developer understands the User's request :).
+
+Status:
+	Requirements Satisfied /Requirements Not yet Satisfied
+/Implementation being tested  
+
+Date of Requirement Satisfaction:
+
+Files Modified:
+	Useful for Bug Fixing.
+
+Developer's Comments:
+	Can explain situations where the extensions can be used and also
+where they are not applicable. Explanation of the interfaces(methods) that have
+been added to satisfy the requirement.

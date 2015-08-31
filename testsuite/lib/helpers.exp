@@ -1,0 +1,360 @@
+
+# Copyright (C) Clifton Labs, Inc
+# All rights reserved.
+
+# CLIFTON LABS MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+# THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+# NON-INFRINGEMENT.  CLIFTON LABS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED
+# BY LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR DISTRIBUTING
+# THIS SOFTWARE OR ITS DERIVATIVES.
+
+# By using or copying this Software, Licensee agrees to abide by the
+# intellectual property laws, and all other applicable laws of the U.S., and
+# the terms of this license.
+
+# You may modify, distribute, and use the software contained in this package
+# under the terms of the "GNU LIBRARY GENERAL PUBLIC LICENSE" version 2, June
+# 1991. A copy of this license agreement can be found in the file "LGPL",
+# distributed with this archive.
+
+# -----------------------------------------------------------------------
+# Helper functions for building the commands used in the test suite.
+# -----------------------------------------------------------------------
+
+# Return scram command line arguments to support requested test level.
+proc get_scram_args {test_level} {
+
+    global language_std
+
+    set return_string ""
+
+    # add language switches
+    if {${language_std} == "vhdl-93" || ${language_std} == "1076-1993"} {
+        set return_string [concat ${return_string} "--vhdl-93"]
+    } elseif {${language_std} == "vhdl-ams" || ${language_std} == "1076.1-1999"} {
+        set return_string [concat ${return_string} "--vhdl-ams"]
+    } else {
+        set return_string [concat ${return_string} "--vhdl-2001"]
+    }
+
+    # add switches needed for publishing....
+    if {[lsearch [concat "publish-cc" "build" "simulate"] ${test_level}] != -1} {
+	set return_string [concat ${return_string} "--publish-cc"]
+    } elseif {${test_level} == "publish-vhdl"} {
+        set return_string [concat ${return_string} "--publish-vhdl"]
+    }
+
+    return ${return_string}
+}
+
+
+# Exercise the VHDL model as per the TESTLEVEL requirements.
+#     This is the procedure in this mess with true grit....
+proc exercise_vhdl_model {test_file test_args args} {
+
+    global make_command
+    global scram_binary
+    global scram_arguments
+    global scram_test_level
+    global scram_library
+    global timeout
+    global objdir
+    global subdir
+
+    report_info2 "exercise_vhdl_model invoked for testcase ${test_file} and with arguments ${test_args} and ${args}\n"
+
+    if {${args} != ""} {
+	set test_args [concat ${test_args} ${args}]
+    }
+
+    # set local variable before examining argument list
+    set binary ${scram_binary}    
+    set test_level ${scram_test_level}
+    set library ${scram_library}
+    set input_files ""
+    set output_files ""
+
+    # parse optional arguments....
+    if {${test_args} != ""} {
+	foreach i ${test_args} {
+
+	    report_info2 "Parsing run_test/build_test argument ${i}: "
+
+	    if {[llength [split ${i} "="]] !=2} {
+		    report_warning "Unable to parse run_test/build_test arguments for ${test_file},"
+		    report_warning "  the offending arguments are ${i}."
+		    report_warning "  The proper form for arguments is: lhs=rhs."
+		report_warning "Unable to parse argument ${i}"
+		return "fail=test_setup"
+	    }
+
+	    set lhs [lindex [split ${i} "="] 0]
+	    set rhs [lindex [split ${i} "="] 1]
+
+	    switch ${lhs} {
+		"SCRAMBIN"     {
+				set binary ${rhs}
+				report_info2 "reseting binary location to ${binary}\n"
+			    }
+		"TESTLEVEL" {
+				set test_level ${rhs}
+				report_info2 "reseting test level to ${test_level}\n"
+			    }
+		"LIBRARY"   {
+				set library ${rhs}
+				report_info2 "reseting library to ${library}\n"
+			    }
+		"INPUT"	    {
+				set input_files ${rhs}
+				report_info2 "setting input files to ${input_files}\n"
+			    }
+		"OUTPUT"    {
+				set output_files ${rhs}
+				report_info2 "setting output files to ${output_files}\n"
+			    }
+		default     {
+		    report_warning "Unknown argument on run_test/build_test for test ${test_file},"
+		    report_warning "  the offending arguments are ${i}"
+		    return "fail=test_setup"
+		}
+	    }
+	}
+    }
+
+    # expand the test_file
+    set test_case ${objdir}/${subdir}/${test_file}
+
+    # because scram publish-cc builds a *.a library for all targets to a named
+    # library, we must build to the work directory w/o the
+    # --design-library-name designator....hopefully this will be fixed soon.
+    if {${library} != "work"} {
+	set command [concat ${binary} [get_scram_args $test_level] "--design-library-name ${library}"]
+    } else {
+	set command [concat ${binary} [get_scram_args $test_level]]
+    }
+
+    # blindly append the scram arguments passed in from the user (as an environment variable)....
+    set command [concat ${command} ${scram_arguments}]
+
+    # ok, the publish-vhdl test is special case that we peal off and do separately....
+    if {${test_level} == "publish-vhdl"} { 
+	return [exercise_publish_vhdl_test ${command} ${test_case} ${args}]
+    }
+    
+    # if we get here we're not testing the publish-vhdl operation....
+    report_info2 "Issuing command: ${command} ${test_case}\n"
+
+    # run the analyzer and test results
+    set output_trace [lindex [local_exec "${command}  ${test_case}" "" "" ${timeout}] 1]
+
+    # record the analyzer result
+    set wk [test_analyzer_output ${output_trace}]
+    record_analyzer_result ${test_case} ${wk}
+
+    if {${wk} == "fail"} {
+	return "fail=analyzer"
+    } elseif {${test_level} == "parse"} {
+	return ${wk}
+    }
+
+    report_info2 "Testing publish-cc output.\n"
+
+    set wk [test_publish_cc_output ${output_trace}]
+    record_publish_cc_result ${test_case} ${wk}
+
+    if {${wk} == "fail"} {
+	return "fail=publish-cc"
+    } elseif {${test_level} == "publish-cc"} {
+	return ${wk}
+    }
+
+    report_info2 "Attempting to build the generated code.\n"
+
+    cd ${library}._savant_lib
+    set output_trace [lindex [local_exec "${make_command}" "" "" ${timeout}] 1]
+    cd ..
+
+    # record the build result
+    set wk [test_build_output ${output_trace}]
+    record_build_result ${test_case} ${wk}
+
+    if {${wk} == "fail"} {
+	return "fail=build"
+    } elseif {${test_level} == "build"} {
+	return ${wk}
+    }
+
+    report_info2 "Attempting to simulate the VHDL model.\n"
+
+    cd ${library}._savant_lib
+
+    # look into makefile to locate command to run simulation
+    if [file exists "Makefile"] {
+	set makefile [open "Makefile" r]
+	#read in makefile checking each line
+	gets ${makefile} makefileData
+
+	set simulation_command ""
+	while {[gets ${makefile} makefileData] != -1 } {
+	    if [regexp -nocase "all:(.)*" $makefileData simulation_command] then {break}
+	}
+	close $makefile
+
+	if {${simulation_command} == ""} {
+	    report_warning "Unable to locate simulation command in makefile.\n"
+	    cd ..
+	    return "fail=missing-simulation-command"
+	}
+	    
+	# peal out the actual command for simulating this vhdl model....
+	regsub -nocase "all: " ${simulation_command} "./" simulation_command
+
+	# copy any needed input files....ignore errors and let simulation failure drive debugging
+	if {${input_files} != ""} {
+	    foreach i [split ${input_files} ","] {
+		set input_spec [split ${i} ":"]
+		report_info2 "Copying input files with command: cp ${objdir}/${subdir}/[lindex ${input_spec} 1] [lindex ${input_spec} 0]\n"
+		local_exec "cp ${objdir}/${subdir}/[lindex ${input_spec} 1] [lindex ${input_spec} 0]" "" "" ${timeout}
+	    }
+	}
+
+	report_info2 "Attempting to run VHDL model with command:  ${simulation_command}\n"
+	set output_trace [lindex [local_exec "${simulation_command}" "" "" ${timeout}] 1]
+
+	# record the simulation result (pass/fail)
+	set wk [test_simulation_output ${output_trace}]
+
+	# now check that any output files have the specified contents....
+	if {${output_files} != ""} {
+	    foreach i [split ${output_files} ","] {
+		set output_spec [split ${i} ":"]
+		report_info2 "Checking outfiles files with command: diff -s ${objdir}/${subdir}/[lindex ${output_spec} 1] [lindex ${output_spec} 0]\n"
+		set output_trace [lindex [local_exec "diff -s ${objdir}/${subdir}/[lindex ${output_spec} 1] [lindex ${output_spec} 0]" "" "" ${timeout}] 1]
+		if ![regexp -nocase "identical" ${output_trace}] {
+		    set ${wk} "fail"
+		}
+	    }
+	}
+
+	# return to the original directory to allow continued testing
+	cd ..
+
+	record_simulation_result ${test_case} ${wk}
+
+	if {${wk} == "fail"} {
+	    return "fail=simulation"
+	} elseif {${test_level} == "simulate"} {
+	    return ${wk}
+	}
+    } else {
+	# report a warning, we do not want to terminate the entire test run....
+	report_warning "Unable to find simulation command (makefile) does not exist." 
+	cd ..
+	return "fail=missing-makefile"
+    }
+
+    # we should never make it this far, but just in case, use a pessimistic return policy....
+    return "fail=reason-unknown"
+}
+
+
+# the strategy for testing the publish-vhdl function is as follows.  
+# 1. process the original vhdl file and redirect the vhdl output to a
+#    temporary file
+# 2. process the temp file produced in step 1 and capture the second
+#    output. 
+# 3. compare the output from each run: call it a pass if they match.
+proc exercise_publish_vhdl_test {command test_case args} {
+
+    global timeout
+
+    # these variable stores a temporary filenames
+    global publish_vhdl_tmp_file
+
+    report_info2 "exercise_publish_vhdl_test invoked with arguments ${command}, ${test_case}, and ${args}\n"
+
+    # first pass
+    set output_trace [lindex [local_exec "${command} ${test_case}" "" "" ${timeout}] 1]
+    set wk [test_analyzer_output ${output_trace}]
+    record_analyzer_result ${test_case} ${wk}
+
+    if {${wk} == "fail"} {return "fail=analyzer-pass1"}
+
+    # trim scram output
+    regsub -nocase "(.)*no errors." ${output_trace} "" first_run_output
+
+    # write the first run output to the temp file
+    set tmp_file [open ${publish_vhdl_tmp_file} w]
+    puts ${tmp_file} ${first_run_output}
+    close ${tmp_file}
+
+    # second pass
+    set output_trace [lindex [local_exec "${command} ${publish_vhdl_tmp_file}" "" "" ${timeout}] 1]
+    set wk [test_analyzer_output ${output_trace}]
+    record_analyzer_pass2_result ${test_case} ${wk}
+
+    if {${wk} == "fail"} {return "fail=analyzer-pass2"}
+
+    # trim scram output
+    regsub -nocase "(.)*no errors." ${output_trace} "" second_run_output
+
+    # compare the two output files
+    if {${first_run_output} == ${second_run_output}} {
+	record_publish_vhdl_result ${test_case} "pass"
+	return "pass"
+    } else {
+	record_publish_vhdl_result ${test_case} "fail"
+	return "fail=vhdl-output-differs"
+    }
+}
+
+
+# Test the output to see if the scram analyzer successfully processed the
+# file; return pass/fail accordingly.
+proc test_analyzer_output {output_trace} {
+    if [regexp -nocase "no errors" ${output_trace}] {
+	return "pass"
+    } else {
+	return "fail"
+    }
+}
+
+
+# Test the output to see if c++ code generation was successful; return
+# pass/fail accordingly.  If the code generated reported a warning, record as
+# a failure.
+proc test_publish_cc_output {output_trace} {
+    if [regexp -nocase "Code generation finished." ${output_trace}] {
+# uncomment the if/else statement if you want warnings to report as failure
+#	if ![regexp -nocase "warning" ${output_trace}] then {
+	    return "pass"
+#	} else {return "fail"}
+    } else {
+	return "fail"
+    }
+}
+
+
+# Test the output to see if the build (make) of c++ output compiled
+# successfully; return pass/fail accordingly.
+proc test_build_output {output_trace} {
+    if ![regexp -nocase "error" ${output_trace}] then {
+	return "pass"
+    } else {
+	return "fail"
+    }	
+}
+
+
+# Test the output to see if the simulation concluded successfully; return
+# pass/fail accordingly. For purposes of this test harness, we assume that the
+# simulation outputs the string "PASSED" only when time simulation executes
+# correctly.
+proc test_simulation_output {output_trace} {
+    if [regexp "Simulation complete" ${output_trace}] then {
+	return "pass"
+    } else {
+	return "fail"
+    } 
+}

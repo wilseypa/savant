@@ -1,0 +1,105 @@
+
+# Copyright (C) Clifton Labs, Inc
+# All rights reserved.
+
+# CLIFTON LABS MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF
+# THE SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+# NON-INFRINGEMENT.  CLIFTON LABS SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED
+# BY LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR DISTRIBUTING
+# THIS SOFTWARE OR ITS DERIVATIVES.
+
+# By using or copying this Software, Licensee agrees to abide by the
+# intellectual property laws, and all other applicable laws of the U.S., and
+# the terms of this license.
+
+# You may modify, distribute, and use the software contained in this package
+# under the terms of the "GNU LIBRARY GENERAL PUBLIC LICENSE" version 2, June
+# 1991. A copy of this license agreement can be found in the file "LGPL",
+# distributed with this archive.
+
+load_lib dejagnu_fixes.exp
+load_lib reporting_functions.exp
+load_lib counters.exp
+load_lib helpers.exp
+load_lib savant_drivers.exp
+
+# -----------------------------------------------------------------------
+# Standard functions invoked by the runtest script.
+# -----------------------------------------------------------------------
+
+# This function is invoked before each expect script found in the
+# testsuite is executed. 
+proc savant_init {script} {
+    report_info2 "savant_init invoked for test script ${script}.\n"
+    # Reset the default library to work
+    use_lib "work"
+}
+
+# This function is invoked after each expect script found in the
+# testsuite is executed. 
+proc savant_finish {} {
+    report_info2 "savant_finish invoked.\n"
+    # Reset the default library to work
+    use_lib "work"
+}
+
+# This function is invoked after all of the expect script found in the
+# testsuite are executed. 
+proc savant_exit {} {
+
+    global global_list_of_counters
+    global scram_test_level
+
+    report_info2 "savant_exit invoked.\n"
+
+    open_results
+    if {${scram_test_level} != "publish-vhdl"} {
+	dump_counters ${global_list_of_counters}
+    } else {
+	dump_publish_vhdl_counters ${global_list_of_counters}
+    }
+
+    # remove the vhdl library
+    global scram_library
+    delete_lib ${scram_library}
+
+    # remove the publish-vhdl temporary file
+    global publish_vhdl_tmp_file
+    exec rm -f ${publish_vhdl_tmp_file}
+
+    # cleanup from an abnormal terminations
+    exec rm -f core
+
+    # sadly dejagnu (more precisely runtest) records an exit code of 1 if a
+    # test fails.  this screws up the return from a successful regression run
+    # and can cause scripts to fail incorrectly.  thus, we will reset this
+    # exit_status global variable in the "normal" exit routine.  if runtest
+    # really fails badly it hopefully will not call this routine and the
+    # script will fail (as it should).
+    global exit_status
+    set exit_status 0
+}
+
+# This function is invoked at the end to identify which version of savant
+# was used during this test run.
+proc savant_version {} {
+    global scram_binary
+    global start_time
+    global timeout
+
+    report_info2 "savant_version invoked.\n"
+
+    set version [lindex [local_exec "${scram_binary} --version" "" "" ${timeout}] 1]
+    set stop_time [lindex [local_exec "date" "" "" ${timeout}] 1]
+
+    # prune trailing newline character....
+    regsub -nocase "\n$" ${version} "" version
+    regsub -nocase "\n$" ${start_time} "" start_time
+    regsub -nocase "\n$" ${stop_time} "" stop_time
+
+    write_results "This test used binary: ${scram_binary}, reporting version: ${version}"
+    write_results "This test began at: ${start_time}"
+    write_results "      and ended at: ${stop_time}"
+    close_results
+}

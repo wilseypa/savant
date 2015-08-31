@@ -1,0 +1,73 @@
+.TH SCRAM 1 "1/2/2004" "scram" "scram manual page"
+
+.SH NAME
+scram \- an extensible VHDL analyzer/code generator
+
+.SH SYNOPSIS
+.B scram  [options] file[s]
+
+.SH DESCRIPTION
+.I scram
+is a parser for the VHDL '93 hardware description language.  VHDL
+descriptions are parsed into the AIRE intermediate form.  SCRAM can
+output either VHDL or C++ output.  The C++ output is in a form
+suitable for linking with the TyVIS VHDL simulation kernel.
+
+.SH OPTIONS
+.TP 12
+.B \--debug-symbol-table
+Generate additional output to aid in the debugging of items stored in
+the symbol table.  Probably only useful for developers.
+.TP
+.B \--debug-gen-cc-ref
+Inserts comments into the generated code showing where in the code
+generator various lines were produced.  Probably only useful for
+developers.
+.TP
+.B \--design-library-name <library name>
+Generate code into the logical library named.  Will create a directory
+called <library name>._savant_lib if such a directory is not found in
+VHDL_LIBRARY_PATH or the builtin search path.
+.TP
+.B \--no-file-output
+Generate C++ output to stdout instead of files.
+.TP
+.B \--warranty-info
+Shows a message about the lack of warranty.
+.TP
+.B \--vhdl-93
+Process input as conforming to IEEE standard 1076-1993.  This is the
+default.
+.TP
+.B \--vhdl-ams
+Process input as conforming to IEEE standard 1076.1-1999, or VHDL-AMS.
+Highly experimental - assume that it is broken.
+.TP
+.B \--vhdl-2001
+Process input as conforming to 1076-2001.  Experimental.
+.TP
+.B \--version
+Output version information.
+.TP
+.B \--verbose
+Verbose parsing - will show the search paths that the analyzer is using to
+locate libraries and additional information.
+.TP
+.B \-help
+prints a usage statement.
+
+.SH AUTHORS
+Philip A. Wilsey and Dale Martin, and many others.  See the AUTHORS file
+that ships with the source archive, which can be downloaded from
+<http://www.cliftonlabs.com/savant/download>
+
+.SH COPYRIGHT
+Copyright (c) 1993-2003 The University of Cincinnati.  All rights
+reserved.  No guarantee whatsoever is provided by UC.  No liability
+whatsoever is accepted for any loss or damage of any kind resulting from
+any defect or inaccuracy in this information or code.
+
+.SH BUGS
+Many bugs.  Those that are known can be found at
+<http://www.cliftonlabs.com/bugzilla>.  Feel free to report more and or
+discuss on the mailing lists found at
