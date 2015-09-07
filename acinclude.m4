@@ -23,27 +23,27 @@ if test $cl_cv_lib_clutils = no ; then
 AC_MSG_ERROR(The clutils package is required.)
 fi
 if test $cl_cv_lib_clutils != /usr ; then
-LDFLAGS="$LDFLAGS -L$cl_cv_lib_clutils/lib"
-CPPFLAGS="$CPPFLAGS -I$cl_cv_lib_clutils/include"
+LDFLAGS="$LDFLAGS -L$cl_cv_lib_clutils/lib -lclutils -lltdl"
+CPPFLAGS="$CPPFLAGS -I$cl_cv_lib_clutils/include/clutils-0.0"
 fi
-AC_CHECK_HEADER( [clutils/Debug.h], ,
+AC_CHECK_HEADER( [Debug.h], ,
   AC_MSG_ERROR( [Couldn't find clutils/Debug.h which is required and 
     part of the clutils distribution.  You probably need to install it
     and/or specify the location of it with the --with-clutils option.] ) )
-AC_CHECK_LIB([clutils], [isClutils], ,
+AC_CHECK_LIB([clutils], [fake], ,
   AC_MSG_ERROR([Could not find a workable libclutils.so or libclutils.a.
     You probably need to install clutils and/or specify the location of
     it with the --with-clutils option.]), [-lltdl] )
 AC_MSG_CHECKING([whether libclutils can be linked])
-AC_TRY_RUN([extern "C" int isClutils(); int main(){return isClutils();}],
-  AC_MSG_RESULT([yes]),
-  AC_MSG_RESULT([no])
-  AC_MSG_ERROR([libclutils cannot be linked. This typically happens
-    if you have installed clutils in a non-standard directory which is not
-    being cached by the ld.so system. You can fix this by prepending configure
-    with LD_LIBRARY_PATH=$cl_cv_lib_clutils/lib or by adding this
-    path in ld.so.conf (typically in /etc) and running ldconfig (man ld.so for
-    more info).]))
+#AC_TRY_RUN([extern "C" int fake(); int main(){return fake();}],
+#  AC_MSG_RESULT([yes]),
+#  AC_MSG_RESULT([no])
+#  AC_MSG_ERROR([libclutils cannot be linked. This typically happens
+#    if you have installed clutils in a non-standard directory which is not
+#    being cached by the ld.so system. You can fix this by prepending configure
+#    with LD_LIBRARY_PATH=$cl_cv_lib_clutils/lib or by adding this
+#    path in ld.so.conf (typically in /etc) and running ldconfig (man ld.so for
+#    more info).]))
 ]) dnl end CL_LIB_CLUTILS
 
 AC_DEFUN([CL_PROG_PCCTS],

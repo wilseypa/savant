@@ -21,7 +21,7 @@
 
 AC_INIT([savant],[2.0-pre040909])
 AC_CONFIG_SRCDIR([src/analyzer/scram.cc])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign subdir-objects])
 AC_PREREQ(2.57)
 
 AC_CONFIG_HEADERS( [src/savant_config.hh:src/savant_config.hh.in] )
